@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart'; // Import GoogleFonts
 import 'login_screen.dart';
 import '../shared/theme.dart' as app_theme;
+import '../api_service.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -19,14 +20,35 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
 
-  void _register() {
+  bool _isLoading = false;
+  String? _errorMessage;
+
+  void _register() async {
     if (_formKey.currentState!.validate()) {
+      setState(() {
+        _isLoading = true;
+        _errorMessage = null;
+      });
       String username = _usernameController.text;
       String email = _emailController.text;
       String password = _passwordController.text;
-      print(
-          'Register attempt with Username: $username, Email: $email, Password: $password');
-      Navigator.of(context).pop();
+      final result = await ApiService.register(
+        username,
+        email,
+        password,
+        _confirmPasswordController.text,
+      );
+      setState(() {
+        _isLoading = false;
+      });
+      if (result['success']) {
+        // TODO: Store token securely (e.g. with flutter_secure_storage)
+        Navigator.of(context).pop();
+      } else {
+        setState(() {
+          _errorMessage = result['message'] ?? 'Registration failed';
+        });
+      }
     }
   }
 
@@ -202,9 +224,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                   ),
                   const SizedBox(height: 24),
+                  if (_errorMessage != null) ...[
+                    Text(
+                      _errorMessage!,
+                      style: TextStyle(color: Colors.red),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 12),
+                  ],
                   ElevatedButton(
-                    onPressed: _register,
-                    child: const Text('Sign Up'),
+                    onPressed: _isLoading ? null : _register,
+                    child: _isLoading
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Text('Sign Up'),
                   ),
                   SizedBox(height: app_theme.defaultMargin),
                   Row(

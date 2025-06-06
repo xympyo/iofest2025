@@ -1,0 +1,2 @@
+D:/University/Competition/IO Fest Competition 2025 (Menang pls)/code/iofest/android/app/.cxx/Debug/56d294j5/x86/CMakeFiles/edit_cache.dir
+D:/University/Competition/IO Fest Competition 2025 (Menang pls)/code/iofest/android/app/.cxx/Debug/56d294j5/x86/CMakeFiles/rebuild_cache.dir

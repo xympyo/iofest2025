@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'register_screen.dart';
 import 'home_screen.dart';
 import '../shared/theme.dart' as app_theme;
+import '../api_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -19,15 +20,31 @@ class _LoginScreenState extends State<LoginScreen> {
   // 1. Add state variable for password visibility
   bool _obscurePassword = true;
 
-  void _login() {
+  bool _isLoading = false;
+  String? _errorMessage;
+
+  void _login() async {
     if (_formKey.currentState!.validate()) {
+      setState(() {
+        _isLoading = true;
+        _errorMessage = null;
+      });
       String email = _emailController.text;
       String password = _passwordController.text;
-      print('Login attempt with Email: $email, Password: $password');
-
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => const HomeScreen()),
-      );
+      final result = await ApiService.login(email, password);
+      setState(() {
+        _isLoading = false;
+      });
+      if (result['success']) {
+        // TODO: Store token securely (e.g. with flutter_secure_storage)
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
+        );
+      } else {
+        setState(() {
+          _errorMessage = result['message'] ?? 'Login failed';
+        });
+      }
     }
   }
 
@@ -161,9 +178,23 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                   const SizedBox(height: 24),
+                  if (_errorMessage != null) ...[
+                    Text(
+                      _errorMessage!,
+                      style: TextStyle(color: Colors.red),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 12),
+                  ],
                   ElevatedButton(
-                    onPressed: _login,
-                    child: const Text('Login'),
+                    onPressed: _isLoading ? null : _login,
+                    child: _isLoading
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Text('Login'),
                   ),
                   const SizedBox(height: 24),
                   Row(
