@@ -24,7 +24,7 @@ TextStyle primaryLightTextStyle = GoogleFonts.poppins(
 TextStyle secondaryTextStyle = GoogleFonts.poppins(
   color: kSecondaryColor,
 );
-TextStyle whtieTextStyle = GoogleFonts.poppins(
+TextStyle whiteTextStyle = GoogleFonts.poppins(
   color: kWhiteColor,
 );
 TextStyle triaryTextStyle = GoogleFonts.poppins(
