@@ -1,4 +1,3 @@
-// lib/widgets/favorite_genre_list.dart
 import 'package:flutter/material.dart';
 import '../shared/theme.dart' as app_theme;
 
@@ -18,7 +17,7 @@ class FavoriteGenreList extends StatelessWidget {
         itemBuilder: (context, index) {
           final genre = favoriteGenres[index];
           return Container(
-            width: 100,
+            width: 110,
             margin: const EdgeInsets.only(right: 16),
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -28,7 +27,10 @@ class FavoriteGenreList extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(genre['icon'], size: 40, color: app_theme.kPrimaryColor),
-                const Spacer(),
+                
+                // CHANGED: Replaced Spacer with a SizedBox for controlled spacing
+                const SizedBox(height: 8), 
+                
                 Text(genre['title'],
                     style: app_theme.primaryTextStyle.copyWith(
                         fontWeight: app_theme.semiBold,

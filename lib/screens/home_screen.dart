@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 // Screen Imports
 import 'account_screen.dart';
+import 'quick_activity_screen.dart';
 
 // Model Imports
 import '../models/storybook.dart';
@@ -27,9 +28,57 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
-  String userName = "Moshe Dayan";
 
-  // Dummy data for genres
+  // List of the main pages accessible from the bottom navigation bar.
+  final List<Widget> _pages = [
+    const HomePageContent(), // Index 0
+    const QuickActivityScreen(), // <-- 2. REPLACE THE PLACEHOLDER FOR INDEX 1
+    const PlaceholderPage(title: 'Create Page'), // Index 2
+    const PlaceholderPage(title: 'Analytics Page'), // Index 3
+    const PlaceholderPage(title: 'Dashboard Page'), // Index 4
+  ];
+
+  void _onNavItemTapped(int index) {
+    setState(() {
+      _currentIndex = index;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: app_theme.kWhiteColor,
+      body: Stack(
+        children: [
+          // The body now shows the currently selected page from the _pages list
+          _pages[_currentIndex],
+          
+          // The floating navigation bar is layered on top
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: CustomBottomNavBar(
+              currentIndex: _currentIndex,
+              onTap: _onNavItemTapped,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// -----------------------------------------------------------------------------
+// The content of the home page (index 0)
+// -----------------------------------------------------------------------------
+class HomePageContent extends StatefulWidget {
+  const HomePageContent({super.key});
+
+  @override
+  State<HomePageContent> createState() => _HomePageContentState();
+}
+
+class _HomePageContentState extends State<HomePageContent> {
+  final String userName = "Moshe Dayan";
   final List<String> genres = ['Drama', 'Fantasi', 'Kerajaan', 'Komedi', 'Aksi'];
   final List<Map<String, dynamic>> favoriteGenres = [
     {'title': 'Romance', 'icon': Icons.favorite_border},
@@ -39,80 +88,63 @@ class _HomeScreenState extends State<HomeScreen> {
   ];
   int selectedGenreIndex = 0;
 
-  void _onNavItemTapped(int index) {
-    setState(() => _currentIndex = index);
-    // TODO: Handle navigation for other bottom bar items
-  }
-
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: app_theme.kWhiteColor,
-      body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.symmetric(vertical: 20),
-          children: [
-            _buildHeader(context),
-            const SizedBox(height: 24),
-            const SectionTitle("Storybook of the day"),
-            const SizedBox(height: 16),
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: app_theme.defaultMargin),
-              child: StorybookOfTheDayCard(storybook: storyOfTheDay),
-            ),
-            const SizedBox(height: 24),
-            const SectionTitle("Newest Storybook"),
-            const SizedBox(height: 16),
-            StorybookHorizontalList(dummyStorybooks.reversed.toList()),
-            const SizedBox(height: 24),
-            const SectionTitle("Most viewed Storybook"),
-            const SizedBox(height: 16),
-            StorybookHorizontalList(dummyStorybooks),
-            const SizedBox(height: 24),
-            const SectionTitle("Recommended Storybook"),
-            const SizedBox(height: 16),
-            StorybookHorizontalList(dummyStorybooks.skip(2).toList()),
-            const SizedBox(height: 24),
-            const SectionTitle("Best Storybook based of Genre"),
-            const SizedBox(height: 16),
-            GenreSelector(
-              genres: genres,
-              selectedIndex: selectedGenreIndex,
-              onGenreSelected: (index) {
-                setState(() {
-                  selectedGenreIndex = index;
-                  // TODO: Add logic to filter stories by genre
-                });
-              },
-            ),
-            const SizedBox(height: 16),
-            StorybookHorizontalList(dummyStorybooks.reversed.skip(1).toList()),
-            const SizedBox(height: 24),
-            _buildFavoriteGenreHeader(),
-            const SizedBox(height: 16),
-            FavoriteGenreList(favoriteGenres: favoriteGenres),
-            const SizedBox(height: 24),
-            const ActivityCard(),
-            const SizedBox(height: 20), // Extra space at the bottom
-          ],
-        ),
-      ),
-      bottomNavigationBar: CustomBottomNavBar(
-        currentIndex: _currentIndex,
-        onTap: _onNavItemTapped,
+    return SafeArea(
+      child: ListView(
+        padding: const EdgeInsets.only(top: 20),
+        children: [
+          _buildHeader(context),
+          const SizedBox(height: 24),
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: app_theme.defaultMargin),
+            child: StorybookOfTheDayCard(storybook: storyOfTheDay),
+          ),
+          const SizedBox(height: 24),
+          const SectionTitle("Newest Storybook"),
+          const SizedBox(height: 16),
+          StorybookHorizontalList(dummyStorybooks.reversed.toList()),
+          const SizedBox(height: 24),
+          const SectionTitle("Most viewed Storybook"),
+          const SizedBox(height: 16),
+          StorybookHorizontalList(dummyStorybooks),
+          const SizedBox(height: 24),
+          const SectionTitle("Recommended Storybook"),
+          const SizedBox(height: 16),
+          StorybookHorizontalList(dummyStorybooks.skip(2).toList()),
+          const SizedBox(height: 24),
+          const SectionTitle("Best Storybook based of Genre"),
+          const SizedBox(height: 16),
+          GenreSelector(
+            genres: genres,
+            selectedIndex: selectedGenreIndex,
+            onGenreSelected: (index) {
+              setState(() {
+                selectedGenreIndex = index;
+              });
+            },
+          ),
+          const SizedBox(height: 16),
+          StorybookHorizontalList(dummyStorybooks.reversed.skip(1).toList()),
+          const SizedBox(height: 24),
+          _buildFavoriteGenreHeader(),
+          const SizedBox(height: 16),
+          FavoriteGenreList(favoriteGenres: favoriteGenres),
+          const SizedBox(height: 24),
+          const ActivityCard(),
+          const SizedBox(height: 120),
+        ],
       ),
     );
   }
 
-  // Header with the "Right Overflowed" error fixed.
   Widget _buildHeader(BuildContext context) {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: app_theme.defaultMargin),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        crossAxisAlignment: CrossAxisAlignment.start, // Better vertical alignment
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Wrapped the Column in Expanded to prevent overflow
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -134,7 +166,6 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
           ),
-          // Added a small SizedBox to ensure spacing
           const SizedBox(width: 16),
           GestureDetector(
             onTap: () {
@@ -154,7 +185,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // Also keeping this simple header here, could be extracted if reused.
   Widget _buildFavoriteGenreHeader() {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: app_theme.defaultMargin),
@@ -168,6 +198,24 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           Icon(Icons.arrow_forward, color: app_theme.kBlackColor)
         ],
+      ),
+    );
+  }
+}
+
+// -----------------------------------------------------------------------------
+// A simple placeholder widget for your other pages.
+// -----------------------------------------------------------------------------
+class PlaceholderPage extends StatelessWidget {
+  final String title;
+  const PlaceholderPage({super.key, required this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Text(
+        title,
+        style: app_theme.blackTextStyle.copyWith(fontSize: 24, fontWeight: app_theme.bold),
       ),
     );
   }

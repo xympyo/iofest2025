@@ -1,3 +1,4 @@
+// lib/widgets/custom_bottom_nav_bar.dart
 import 'package:flutter/material.dart';
 import '../shared/theme.dart' as app_theme;
 
@@ -13,83 +14,96 @@ class CustomBottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: app_theme.kWhiteColor,
-        borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(app_theme.defaultRadius * 1.5),
-            topRight: Radius.circular(app_theme.defaultRadius * 1.5)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.2),
-            spreadRadius: 1,
-            blurRadius: 8,
-            offset: const Offset(0, -2),
+    return SizedBox(
+      height: 85,
+      child: Stack(
+        children: [
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: Container(
+              height: 65,
+              decoration: BoxDecoration(
+                color: app_theme.kPrimaryLightColor,
+                borderRadius: BorderRadius.circular(30),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.15),
+                    blurRadius: 12,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+              ),
+
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0), // <-- CHANGED
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    _buildNavItem('assets/images/read.png', 0),
+                    _buildNavItem('assets/images/cards.png', 1),
+                    const SizedBox(width: 50),
+                    _buildNavItem('assets/images/piechart2.png', 3),
+                    _buildNavItem('assets/images/dashboard.png', 4),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          Align(
+            alignment: Alignment.topCenter,
+            child: _buildCentralNavItem('assets/images/Group 1381.png', 2),
           ),
         ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(app_theme.defaultRadius * 1.5),
-          topRight: Radius.circular(app_theme.defaultRadius * 1.5),
-        ),
-        child: BottomNavigationBar(
-          currentIndex: currentIndex,
-          onTap: onTap,
-          type: BottomNavigationBarType.fixed,
-          backgroundColor: app_theme.kWhiteColor,
-          selectedItemColor: app_theme.kPrimaryColor, // Selected icon color
-          unselectedItemColor:
-              app_theme.kBlackColor.withOpacity(0.4), // Unselected icon color
-          showSelectedLabels: false,
-          showUnselectedLabels: false,
-          elevation: 0,
-          items: [
-            _buildNavItem(Icons.menu_book_outlined, Icons.menu_book, 0,
-                currentIndex, context),
-            _buildNavItem(Icons.filter_none_outlined, Icons.filter_none, 1,
-                currentIndex, context),
-            _buildNavItem(Icons.add_circle_outline, Icons.add_circle, 2,
-                currentIndex, context,
-                isCentral: true),
-            _buildNavItem(Icons.history_outlined, Icons.history, 3,
-                currentIndex, context),
-            _buildNavItem(Icons.grid_view_outlined, Icons.grid_view, 4,
-                currentIndex, context),
-          ],
-        ),
       ),
     );
   }
 
-  BottomNavigationBarItem _buildNavItem(IconData outlinedIcon,
-      IconData filledIcon, int index, int currentIndex, BuildContext context,
-      {bool isCentral = false}) {
-    double iconSize = isCentral ? 32 : 26;
-    Color iconColor = currentIndex == index
-        ? app_theme.kPrimaryColor
-        : app_theme.kBlackColor.withOpacity(0.4);
+  Widget _buildNavItem(String imagePath, int index) {
+    bool isSelected = currentIndex == index;
+    return GestureDetector(
+      onTap: () => onTap(index),
+      child: Image.asset(
+        imagePath,
+        height: 28, 
+        width: 28,  
+        color: isSelected
+            ? app_theme.kBlackColor
+            : app_theme.kPrimaryColor.withOpacity(0.6),
+        errorBuilder: (context, error, stackTrace) {
+          return Icon(Icons.error, color: Colors.red, size: 32); 
+        },
+      ),
+    );
+  }
 
-    if (isCentral && currentIndex == index) {
-      // Central active button style
-      return BottomNavigationBarItem(
-        icon: Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: app_theme.kPrimaryColor.withOpacity(0.15),
-            shape: BoxShape.circle,
-          ),
-          child:
-              Icon(filledIcon, size: iconSize, color: app_theme.kPrimaryColor),
+  Widget _buildCentralNavItem(String imagePath, int index) {
+    // You can also make the central button and its icon larger if you wish
+    // For now, we'll keep it as is, but you could change these values.
+    return GestureDetector(
+      onTap: () => onTap(index),
+      child: Container(
+        height: 60,
+        width: 60,
+        decoration: BoxDecoration(
+          color: app_theme.kPrimaryColor,
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: app_theme.kPrimaryColor.withOpacity(0.3),
+              blurRadius: 15,
+              offset: const Offset(0, 8),
+            )
+          ],
         ),
-        label: '',
-      );
-    }
-
-    return BottomNavigationBarItem(
-      icon: Icon(currentIndex == index ? filledIcon : outlinedIcon,
-          size: iconSize, color: iconColor),
-      label: '',
+        child: Center(
+          child: Image.asset(
+            imagePath,
+            height: 32, 
+            width: 32,  
+          ),
+        ),
+      ),
     );
   }
 }

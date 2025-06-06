@@ -9,8 +9,8 @@ class StorybookOfTheDayCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // This is the outer container with the light background and rounded corners
     return Container(
+      padding: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: app_theme.kPrimaryLightColor,
         borderRadius: BorderRadius.circular(app_theme.defaultRadius * 1.5),
@@ -18,54 +18,72 @@ class StorybookOfTheDayCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Part 1: The Image with overlayed text
-          _buildImageStack(),
-          // Part 2: The stats row below the image
+          _buildTitle(),
+          // CHANGED: Wrapped the image stack in Padding for the margin
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 18.0),
+            child: _buildImageStack(),
+          ),
           _buildStatsRow(),
         ],
       ),
     );
   }
 
-  // Widget for the Image, Gradient, and Title/Author Text
+  Widget _buildTitle() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+      child: Text(
+        'Storybook of the day',
+        style: app_theme.blackTextStyle.copyWith(
+          fontSize: 18,
+          fontWeight: app_theme.bold,
+        ),
+      ),
+    );
+  }
+
   Widget _buildImageStack() {
     return Stack(
       children: [
-        // ClipRRect gives the image rounded corners
+        // CHANGED: Wrapped the Image and Gradient in ClipRRect for rounded corners
         ClipRRect(
-          borderRadius: BorderRadius.circular(app_theme.defaultRadius * 1.5),
-          child: Image.asset(
-            storybook.imageUrl,
-            height: 180, // Adjusted height
-            width: double.infinity,
-            fit: BoxFit.cover,
-            errorBuilder: (context, error, stackTrace) {
-              return Container(
-                  height: 180,
-                  width: double.infinity,
-                  color: Colors.grey[400],
-                  child: Icon(Icons.broken_image,
-                      size: 50, color: Colors.grey[600]));
-            },
+          borderRadius: BorderRadius.circular(app_theme.defaultRadius),
+          child: Stack(
+            children: [
+              Image.asset(
+                storybook.imageUrl,
+                height: 180,
+                width: double.infinity,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                      height: 180,
+                      width: double.infinity,
+                      color: Colors.grey[400],
+                      child: Icon(Icons.broken_image,
+                          size: 50, color: Colors.grey[600]));
+                },
+              ),
+              // Gradient overlay for text readability
+              Container(
+                height: 180,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      app_theme.kBlackColor.withOpacity(0.7),
+                      app_theme.kBlackColor.withOpacity(0.0)
+                    ],
+                    begin: Alignment.bottomCenter,
+                    end: Alignment.center,
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
-        // Gradient overlay for text readability
-        Container(
-          height: 180,
-          width: double.infinity,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(app_theme.defaultRadius * 1.5),
-            gradient: LinearGradient(
-              colors: [
-                app_theme.kBlackColor.withOpacity(0.7),
-                app_theme.kBlackColor.withOpacity(0.0)
-              ],
-              begin: Alignment.bottomCenter,
-              end: Alignment.center,
-            ),
-          ),
-        ),
-        // Positioned Title and Author text
+        // Positioned Title and Author text (this stays outside the ClipRRect to avoid being clipped)
         Positioned(
           bottom: 16,
           left: 16,
@@ -99,10 +117,9 @@ class StorybookOfTheDayCard extends StatelessWidget {
     );
   }
 
-  // Widget for the Views and Rating stats
   Widget _buildStatsRow() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+      padding: const EdgeInsets.fromLTRB(16.0, 12.0, 16.0, 0),
       child: Row(
         children: [
           Icon(
