@@ -1,64 +1,78 @@
-class Storybook {
-  final String id;
-  final String title;
-  final String author;
-  final String imageUrl;
+class Rating {
+  final int userId;
   final double rating;
-  final String views;
+  final String comments;
+
+  Rating({
+    required this.userId,
+    required this.rating,
+    required this.comments,
+  });
+
+  factory Rating.fromJson(Map<String, dynamic> json) {
+    return Rating(
+      userId: json['user_id'] as int,
+      rating: (json['rating'] as num).toDouble(),
+      comments: json['comments'] ?? '',
+    );
+  }
+}
+
+class Storybook {
+  final int id;
+  final String title;
+  final String description;
+  final int storybookWords;
+  final int readTime;
+  final int readCount;
+  final int pagesNumber;
+  final bool isApproved;
+  final List<String> genres;
+  final int idLanguage;
+  final String backgroundImage;
+  final String storybookProfile;
+  final DateTime? createdAt;
+  final double averageRating;
+  final int ratingsCount;
+  final List<Rating> ratings;
 
   Storybook({
     required this.id,
     required this.title,
-    required this.author,
-    required this.imageUrl,
-    required this.rating,
-    required this.views,
+    required this.description,
+    required this.storybookWords,
+    required this.readTime,
+    required this.readCount,
+    required this.pagesNumber,
+    required this.isApproved,
+    required this.genres,
+    required this.idLanguage,
+    required this.backgroundImage,
+    required this.storybookProfile,
+    required this.createdAt,
+    required this.averageRating,
+    required this.ratingsCount,
+    required this.ratings,
   });
+
+  factory Storybook.fromJson(Map<String, dynamic> json) {
+    return Storybook(
+      id: json['id'] as int,
+      title: json['title'] ?? '',
+      description: json['description'] ?? '',
+      storybookWords: json['storybook_words'] ?? 0,
+      readTime: json['readTime'] ?? 0,
+      readCount: json['readCount'] ?? 0,
+      pagesNumber: json['pagesNumber'] ?? 0,
+      isApproved: (json['isApproved'] == 1 || json['isApproved'] == true),
+      genres: (json['genres'] as List?)?.map((g) => g.toString()).toList() ?? [],
+      idLanguage: json['idLanguage'] ?? 0,
+      backgroundImage: json['backgroundImage'] ?? '',
+      storybookProfile: json['storybookProfile'] ?? '',
+      createdAt: json['createdAt'] != null ? DateTime.tryParse(json['createdAt']) : null,
+      averageRating: (json['average_rating'] as num?)?.toDouble() ?? 0.0,
+      ratingsCount: json['ratings_count'] ?? 0,
+      ratings: (json['ratings'] as List?)?.map((r) => Rating.fromJson(r)).toList() ?? [],
+    );
+  }
 }
-
-final List<Storybook> dummyStorybooks = [
-  Storybook(
-      id: '1',
-      title: 'Kutukan Wanita Kuning Terhadap Pria OP',
-      author: 'User 123',
-      imageUrl: 'assets/images/placeholder_story1.png',
-      rating: 4.8,
-      views: '1.200'),
-  Storybook(
-      id: '2',
-      title: 'Chrollo Durhaka Terhadap Wanita',
-      author: 'User 456',
-      imageUrl: 'assets/images/placeholder_story2.png',
-      rating: 4.5,
-      views: '1.2 jt'),
-  Storybook(
-      id: '3',
-      title: 'Wanita Kuning Ternyata OP',
-      author: 'User 789',
-      imageUrl: 'assets/images/placeholder_story3.png',
-      rating: 4.9,
-      views: '980'),
-  Storybook(
-      id: '4',
-      title: 'Ternyata Wanita Kuat Banget OP',
-      author: 'User 101',
-      imageUrl: 'assets/images/placeholder_story4.png',
-      rating: 4.7,
-      views: '1.200'),
-  Storybook(
-      id: '5',
-      title: 'GG Chrollo WP',
-      author: 'User 112',
-      imageUrl: 'assets/images/placeholder_story5.png',
-      rating: 4.8,
-      views: '1.2 jt'),
-];
-
-final Storybook storyOfTheDay = Storybook(
-  id: 'sotd',
-  title: 'Lorem Ipsum Dolor Sit Amet',
-  author: 'Lorem Ipsum Dolor Sit Amet',
-  imageUrl: 'assets/images/storybook_of_the_day.png',
-  rating: 4.8,
-  views: '1.280',
-);

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart'; // Import GoogleFonts
 import 'login_screen.dart';
+import 'home_screen.dart';
+import 'home_screen.dart';
 import '../shared/theme.dart' as app_theme;
 import '../api_service.dart';
 
@@ -42,8 +44,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
         _isLoading = false;
       });
       if (result['success']) {
-        // TODO: Store token securely (e.g. with flutter_secure_storage)
-        Navigator.of(context).pop();
+        // Store token securely
+        await ApiService.saveToken(result['token']);
+        // Navigate to home or main screen
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
+        );
       } else {
         setState(() {
           _errorMessage = result['message'] ?? 'Registration failed';

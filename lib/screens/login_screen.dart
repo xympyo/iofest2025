@@ -36,8 +36,11 @@ class _LoginScreenState extends State<LoginScreen> {
         _isLoading = false;
       });
       if (result['success']) {
-        // TODO: Store token securely (e.g. with flutter_secure_storage)
-        Navigator.of(context).pushReplacement(
+        // Store token securely
+        await ApiService.saveToken(result['token']);
+        // Navigate to home or main screen
+        Navigator.pushReplacement(
+          context,
           MaterialPageRoute(builder: (context) => const HomeScreen()),
         );
       } else {

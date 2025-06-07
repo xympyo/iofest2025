@@ -51,8 +51,8 @@ class StorybookOfTheDayCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(app_theme.defaultRadius),
           child: Stack(
             children: [
-              Image.asset(
-                storybook.imageUrl,
+              Image.network(
+                storybook.backgroundImage,
                 height: 180,
                 width: double.infinity,
                 fit: BoxFit.cover,
@@ -102,7 +102,7 @@ class StorybookOfTheDayCard extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                storybook.author,
+                '-',
                 style: app_theme.whiteTextStyle.copyWith(
                   color: app_theme.kWhiteColor.withOpacity(0.8),
                   fontSize: 14,
@@ -129,7 +129,7 @@ class StorybookOfTheDayCard extends StatelessWidget {
           ),
           const SizedBox(width: 6),
           Text(
-            storybook.views,
+            storybook.readCount.toString(),
             style: app_theme.primaryTextStyle.copyWith(
               color: app_theme.kBlackColor.withOpacity(0.8),
               fontWeight: app_theme.medium,
@@ -143,7 +143,7 @@ class StorybookOfTheDayCard extends StatelessWidget {
           ),
           const SizedBox(width: 6),
           Text(
-            "${storybook.rating}/5.0",
+            "${storybook.averageRating}/5.0",
             style: app_theme.primaryTextStyle.copyWith(
               color: app_theme.kBlackColor.withOpacity(0.8),
               fontWeight: app_theme.medium,

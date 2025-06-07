@@ -27,8 +27,8 @@ class StoryCard extends StatelessWidget {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(app_theme.defaultRadius),
             ),
-            child: Image.asset(
-              storybook.imageUrl,
+            child: Image.network(
+              storybook.backgroundImage,
               width: 150, // Match the SizedBox width
               height: 155, // A fixed height for the image
               fit: BoxFit.cover,
@@ -71,7 +71,7 @@ class StoryCard extends StatelessWidget {
                           color: app_theme.kBlackColor.withOpacity(0.6)),
                       const SizedBox(width: 4),
                       Text(
-                        storybook.views,
+                        storybook.readCount.toString(),
                         style: app_theme.primaryTextStyle.copyWith(
                             color: app_theme.kBlackColor.withOpacity(0.6),
                             fontSize: 12),
