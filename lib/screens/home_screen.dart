@@ -79,7 +79,7 @@ class HomePageContent extends StatefulWidget {
 }
 
 class _HomePageContentState extends State<HomePageContent> {
-  late Future<HomePageData?> _homeDataFuture;
+  Future<HomePageData?>? _homeDataFuture;
   int selectedGenreIndex = 0;
   List<String> genres = [];
   String? token;
