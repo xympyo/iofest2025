@@ -214,6 +214,13 @@ class _QuickActivityScreenState extends State<QuickActivityScreen>
                                   width: 280,
                                   height: 400,
                                   isLoading: false,
+                                  showClose: isCardChosen,
+                                  onClose: () {
+                                    setState(() {
+                                      isCardChosen = false;
+                                      _chosen = null;
+                                    });
+                                  },
                                 ),
                               ),
                             ),
@@ -252,46 +259,66 @@ class _QuickActivityScreenState extends State<QuickActivityScreen>
   // Helper to build the button at the bottom
   Widget _buildBottomButton() {
     return GestureDetector(
-      onTap: (_isLoading || _isShuffling)
+      onTap: _isLoading || _isShuffling
           ? null
-          : () {
+          : () async {
               if (!isCardChosen) {
                 _startShuffle();
               } else {
-                // You can handle "Finish" action here
-                Navigator.of(context).pop(_chosen);
+                // Finish pressed
+                final shouldShuffle = await showDialog<bool>(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: const Text('Shuffle again?'),
+                    content: const Text('Do you want to shuffle again?'),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(true),
+                        child: const Text('Yes'),
+                      ),
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(false),
+                        child: const Text('No'),
+                      ),
+                    ],
+                  ),
+                );
+                if (shouldShuffle == true) {
+                  setState(() {
+                    isCardChosen = false;
+                    _chosen = null;
+                  });
+                } else if (shouldShuffle == false) {
+                  Navigator.of(context).pop(_chosen);
+                }
               }
             },
       child: Container(
-        margin: EdgeInsets.only(bottom: 80),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 300),
-          height: isCardChosen ? 72 : 80,
-          width: isCardChosen ? 200 : 80, // Animate width change
-          decoration: BoxDecoration(
-            color:
-                isCardChosen ? app_theme.kBlackColor : app_theme.kPrimaryColor,
-            borderRadius: BorderRadius.circular(60),
-          ),
-          child: Center(
-            child: _isShuffling
-                ? const SizedBox(
-                    width: 28,
-                    height: 28,
-                    child: CircularProgressIndicator(
-                        strokeWidth: 3, color: Colors.white),
-                  )
-                : isCardChosen
-                    ? Text(
-                        'Finish',
-                        style: app_theme.whiteTextStyle.copyWith(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      )
-                    : Icon(Icons.sync, color: app_theme.kWhiteColor, size: 30),
-          ),
+        width: 64,
+        height: 64,
+        decoration: BoxDecoration(
+          color: app_theme.kPrimaryColor,
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: app_theme.kPrimaryColor.withOpacity(0.2),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
+        alignment: Alignment.center,
+        child: _isLoading || _isShuffling
+            ? const SizedBox(
+                width: 28,
+                height: 28,
+                child: CircularProgressIndicator(
+                    strokeWidth: 3, color: Colors.white),
+              )
+            : isCardChosen
+                ? Text('Finish',
+                    style: app_theme.whiteTextStyle.copyWith(fontSize: 16))
+                : Icon(Icons.sync, color: app_theme.kWhiteColor, size: 30),
       ),
     );
   }

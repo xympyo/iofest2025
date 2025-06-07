@@ -10,6 +10,8 @@ class ActivityInfoCard extends StatelessWidget {
   final double width;
   final double height;
   final bool isLoading;
+  final bool showClose;
+  final VoidCallback? onClose;
 
   const ActivityInfoCard({
     super.key,
@@ -21,6 +23,8 @@ class ActivityInfoCard extends StatelessWidget {
     this.width = 280,
     this.height = 400,
     this.isLoading = false,
+    this.showClose = false,
+    this.onClose,
   });
 
   @override
@@ -45,6 +49,19 @@ class ActivityInfoCard extends StatelessWidget {
             right: -20,
             child: Image.asset('assets/images/Intersect.png'),
           ),
+
+          // Show close button if enabled
+          if (showClose)
+            Positioned(
+              top: 8,
+              right: 8,
+              child: IconButton(
+                icon: const Icon(Icons.close_rounded, color: Colors.black54, size: 28),
+                splashRadius: 20,
+                onPressed: onClose,
+                tooltip: 'Shuffle again',
+              ),
+            ),
 
           // The main content of the card
           Padding(
