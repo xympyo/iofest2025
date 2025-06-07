@@ -14,8 +14,12 @@ class CustomBottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
+    return Container(
       height: 85,
+      margin: EdgeInsets.only(bottom: app_theme.defaultMargin),
+      padding: EdgeInsets.symmetric(
+        horizontal: app_theme.defaultMargin,
+      ),
       child: Stack(
         children: [
           Align(
@@ -33,9 +37,9 @@ class CustomBottomNavBar extends StatelessWidget {
                   ),
                 ],
               ),
-
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0), // <-- CHANGED
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16.0), // <-- CHANGED
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   crossAxisAlignment: CrossAxisAlignment.center,
@@ -65,13 +69,13 @@ class CustomBottomNavBar extends StatelessWidget {
       onTap: () => onTap(index),
       child: Image.asset(
         imagePath,
-        height: 28, 
-        width: 28,  
+        height: 28,
+        width: 28,
         color: isSelected
             ? app_theme.kBlackColor
             : app_theme.kPrimaryColor.withOpacity(0.6),
         errorBuilder: (context, error, stackTrace) {
-          return Icon(Icons.error, color: Colors.red, size: 32); 
+          return Icon(Icons.error, color: Colors.red, size: 32);
         },
       ),
     );
@@ -99,8 +103,8 @@ class CustomBottomNavBar extends StatelessWidget {
         child: Center(
           child: Image.asset(
             imagePath,
-            height: 32, 
-            width: 32,  
+            height: 32,
+            width: 32,
           ),
         ),
       ),

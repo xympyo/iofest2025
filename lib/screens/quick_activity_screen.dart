@@ -140,19 +140,23 @@ class _QuickActivityScreenState extends State<QuickActivityScreen>
                       child: Stack(
                         clipBehavior: Clip.none,
                         children: [
-                          // Left card (partially offscreen to the left)
+                          // Left Card
                           if (_displayed.length > 0)
                             Positioned(
                               left: -100,
                               top: 40,
                               child: AnimatedOpacity(
                                 duration: const Duration(milliseconds: 250),
-                                opacity: _isShuffling || !isCardChosen ? 1 : 0.5,
+                                opacity:
+                                    _isShuffling || !isCardChosen ? 1 : 0.5,
                                 child: Transform.scale(
                                   scale: 0.8,
                                   child: ActivityInfoCard(
-                                    category: _displayed[0].activityCategory.category,
-                                    iconPath: _getIconForCategory(_displayed[0].activityCategory.category),
+                                    category:
+                                        _displayed[0].activityCategory.category,
+                                    iconPath: _getIconForCategory(_displayed[0]
+                                        .activityCategory
+                                        .category),
                                     title: _displayed[0].title,
                                     description: _displayed[0].description,
                                     backgroundColor: app_theme.kTriaryColor,
@@ -163,8 +167,36 @@ class _QuickActivityScreenState extends State<QuickActivityScreen>
                                 ),
                               ),
                             ),
-                          // Middle card (centered, on top)
+                          // Right card
                           if (_displayed.length > 1)
+                            Positioned(
+                              right: -100,
+                              top: 40,
+                              child: AnimatedOpacity(
+                                duration: const Duration(milliseconds: 250),
+                                opacity:
+                                    _isShuffling || !isCardChosen ? 1 : 0.5,
+                                child: Transform.scale(
+                                  scale: 0.8,
+                                  child: ActivityInfoCard(
+                                    category:
+                                        _displayed[2].activityCategory.category,
+                                    iconPath: _getIconForCategory(_displayed[2]
+                                        .activityCategory
+                                        .category),
+                                    title: _displayed[2].title,
+                                    description: _displayed[2].description,
+                                    backgroundColor:
+                                        app_theme.kTriaryColor.withOpacity(0.8),
+                                    width: 200,
+                                    height: 320,
+                                    isLoading: false,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          // Middle Card
+                          if (_displayed.length > 2)
                             Positioned(
                               left: 20,
                               top: 0,
@@ -172,37 +204,16 @@ class _QuickActivityScreenState extends State<QuickActivityScreen>
                                 duration: const Duration(milliseconds: 300),
                                 scale: 1.0,
                                 child: ActivityInfoCard(
-                                  category: _displayed[1].activityCategory.category,
-                                  iconPath: _getIconForCategory(_displayed[1].activityCategory.category),
+                                  category:
+                                      _displayed[1].activityCategory.category,
+                                  iconPath: _getIconForCategory(
+                                      _displayed[1].activityCategory.category),
                                   title: _displayed[1].title,
                                   description: _displayed[1].description,
                                   backgroundColor: app_theme.kPrimaryColor,
                                   width: 280,
                                   height: 400,
                                   isLoading: false,
-                                ),
-                              ),
-                            ),
-                          // Right card (partially offscreen to the right)
-                          if (_displayed.length > 2)
-                            Positioned(
-                              right: -100,
-                              top: 40,
-                              child: AnimatedOpacity(
-                                duration: const Duration(milliseconds: 250),
-                                opacity: _isShuffling || !isCardChosen ? 1 : 0.5,
-                                child: Transform.scale(
-                                  scale: 0.8,
-                                  child: ActivityInfoCard(
-                                    category: _displayed[2].activityCategory.category,
-                                    iconPath: _getIconForCategory(_displayed[2].activityCategory.category),
-                                    title: _displayed[2].title,
-                                    description: _displayed[2].description,
-                                    backgroundColor: app_theme.kTriaryColor.withOpacity(0.8),
-                                    width: 200,
-                                    height: 320,
-                                    isLoading: false,
-                                  ),
                                 ),
                               ),
                             ),
@@ -251,26 +262,35 @@ class _QuickActivityScreenState extends State<QuickActivityScreen>
                 Navigator.of(context).pop(_chosen);
               }
             },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        height: 60,
-        width: isCardChosen ? 200 : 60, // Animate width change
-        decoration: BoxDecoration(
-          color: isCardChosen ? app_theme.kBlackColor : app_theme.kPrimaryColor,
-          borderRadius: BorderRadius.circular(30),
-        ),
-        child: Center(
-          child: _isShuffling
-              ? const SizedBox(
-                  width: 28,
-                  height: 28,
-                  child: CircularProgressIndicator(
-                      strokeWidth: 3, color: Colors.white),
-                )
-              : isCardChosen
-                  ? Text('Finish',
-                      style: app_theme.whiteTextStyle.copyWith(fontSize: 16))
-                  : Icon(Icons.sync, color: app_theme.kWhiteColor, size: 30),
+      child: Container(
+        margin: EdgeInsets.only(bottom: 80),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          height: isCardChosen ? 72 : 80,
+          width: isCardChosen ? 200 : 80, // Animate width change
+          decoration: BoxDecoration(
+            color:
+                isCardChosen ? app_theme.kBlackColor : app_theme.kPrimaryColor,
+            borderRadius: BorderRadius.circular(60),
+          ),
+          child: Center(
+            child: _isShuffling
+                ? const SizedBox(
+                    width: 28,
+                    height: 28,
+                    child: CircularProgressIndicator(
+                        strokeWidth: 3, color: Colors.white),
+                  )
+                : isCardChosen
+                    ? Text(
+                        'Finish',
+                        style: app_theme.whiteTextStyle.copyWith(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      )
+                    : Icon(Icons.sync, color: app_theme.kWhiteColor, size: 30),
+          ),
         ),
       ),
     );
