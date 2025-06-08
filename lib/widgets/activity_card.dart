@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import '../shared/theme.dart' as app_theme;
+import 'package:iofest/screens/quick_activity_screen.dart';
 
 class ActivityCard extends StatelessWidget {
-  const ActivityCard({super.key});
+  final VoidCallback? onQuickActivityTap;
+  const ActivityCard({super.key, this.onQuickActivityTap});
 
   @override
   Widget build(BuildContext context) {
@@ -17,11 +19,10 @@ class ActivityCard extends StatelessWidget {
         children: [
           Image.asset(
             'assets/images/cards.png',
-            width: 75,  
-            height: 75, 
+            width: 75,
+            height: 75,
           ),
           const SizedBox(width: 30),
-
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -47,7 +48,9 @@ class ActivityCard extends StatelessWidget {
                 // Custom button to match the UI design
                 GestureDetector(
                   onTap: () {
-                    // TODO: Handle button tap
+                    if (onQuickActivityTap != null) {
+                      onQuickActivityTap!();
+                    }
                   },
                   child: Container(
                     padding: const EdgeInsets.symmetric(

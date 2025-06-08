@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:iofest/widgets/activity_feedback_sheet.dart';
 import '../widgets/activity_info_card.dart';
 import '../models/activity.dart';
 import '../api_service.dart';
@@ -138,26 +139,26 @@ class _QuickActivityScreenState extends State<QuickActivityScreen>
                   // Top Title
                   Text(
                     "Let's choose what\nactivity we can do today!",
-                    textAlign: TextAlign.center,
+                    textAlign: TextAlign.left,
                     style: app_theme.blackTextStyle.copyWith(
                       fontSize: 28,
-                      fontWeight: app_theme.bold,
+                      fontWeight: app_theme.black,
                     ),
                   ),
                   // Animated Activity Cards
                   if (_isLoading)
                     const SizedBox(
-                      height: 400,
+                      height: 280,
                       child: Center(child: CircularProgressIndicator()),
                     )
                   else
                     SizedBox(
-                      height: 400,
+                      height: 280,
                       child: Center(
                         child: SizedBox(
                           width:
                               320, // Only show the center area, cards overflow
-                          height: 400,
+                          height: 280,
                           child: Stack(
                             clipBehavior: Clip.none,
                             children: [
@@ -296,69 +297,109 @@ class _QuickActivityScreenState extends State<QuickActivityScreen>
                 _startShuffle();
               } else {
                 // Finish pressed
-                final shouldShuffle = await showDialog<bool>(
+                // Show feedback sheet instead of AlertDialog
+                final activityId = _chosen?.id;
+                if (activityId == null) return;
+                bool sending = false;
+                await showModalBottomSheet(
                   context: context,
-                  builder: (context) => AlertDialog(
-                    title: const Text('Shuffle again?'),
-                    content: const Text('Do you want to shuffle again?'),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.of(context).pop(true),
-                        child: const Text('Yes'),
-                      ),
-                      TextButton(
-                        onPressed: () => Navigator.of(context).pop(false),
-                        child: const Text('No'),
-                      ),
-                    ],
-                  ),
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (ctx) {
+                    return DraggableScrollableSheet(
+                      initialChildSize: 0.7,
+                      minChildSize: 0.5,
+                      maxChildSize: 0.9,
+                      expand: false,
+                      builder: (context, scrollController) {
+                        return Material(
+                          borderRadius: BorderRadius.circular(24),
+                          color: Colors.white,
+                          child: SingleChildScrollView(
+                            controller: scrollController,
+                            child: ActivityFeedbackSheet(
+                              isLoading: sending,
+                              onSend: (
+                                  {required int understanding,
+                                  required int participation,
+                                  required String notes}) async {
+                                if (sending) return;
+                                sending = true;
+                                await ApiService.completeDailyTask(
+                                  activityId,
+                                  understanding: understanding,
+                                  participation: participation,
+                                  notes: notes,
+                                );
+                                sending = false;
+                                Navigator.of(context).pop();
+                                setState(() {
+                                  isCardChosen = false;
+                                  _chosen = null;
+                                });
+                              },
+                              onClose: () {
+                                if (!sending) {
+                                  ApiService.completeDailyTask(
+                                    activityId,
+                                    understanding: 0,
+                                    participation: 0,
+                                    notes: '',
+                                  );
+                                  Navigator.of(context).pop();
+                                  setState(() {
+                                    isCardChosen = false;
+                                    _chosen = null;
+                                  });
+                                }
+                              },
+                            ),
+                          ),
+                        );
+                      },
+                    );
+                  },
                 );
-                if (shouldShuffle == true) {
-                  setState(() {
-                    isCardChosen = false;
-                    _chosen = null;
-                  });
-                } else if (shouldShuffle == false) {
-                  Navigator.of(context).pop(_chosen);
-                }
               }
             },
       child: Container(
-        width: isCardChosen ? 200 : 60,
+        width: isCardChosen ? 140 : 60,
         height: 60,
-        margin: const EdgeInsets.only(bottom: 92),
+        margin: const EdgeInsets.only(bottom: 60),
         decoration: BoxDecoration(
           color: isCardChosen ? app_theme.kBlackColor : app_theme.kPrimaryColor,
           borderRadius: BorderRadius.circular(60),
           boxShadow: [
             BoxShadow(
-              color: app_theme.kPrimaryColor.withOpacity(0.2),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
+              color: app_theme.kBlackColor.withOpacity(0.1),
+              blurRadius: 15,
+              spreadRadius: 5,
+              offset: const Offset(0, 5),
             ),
           ],
         ),
-        alignment: Alignment.center,
         child: _isLoading || _isShuffling
-            ? const SizedBox(
-                width: 28,
-                height: 28,
-                child: CircularProgressIndicator(
-                    strokeWidth: 3, color: Colors.white),
+            ? const CircularProgressIndicator(
+                padding: EdgeInsets.all(16),
+                color: Colors.white,
               )
             : isCardChosen
-                ? Text(
-                    'Finish',
-                    style: app_theme.whiteTextStyle.copyWith(
-                      fontSize: 24,
-                      fontWeight: FontWeight.w800,
+                ? Center(
+                    child: Text(
+                      'Finish',
+                      style: app_theme.whiteTextStyle.copyWith(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                   )
-                : Image.asset(
-                    'assets/images/randomize.png',
-                    width: 40,
-                    height: 40,
-                    color: app_theme.kPrimaryColor,
+                : Center(
+                    child: Image.asset(
+                      'assets/images/randomize.png',
+                      width: 40,
+                      height: 40,
+                      color: app_theme.kWhiteColor,
+                    ),
                   ),
       ),
     );

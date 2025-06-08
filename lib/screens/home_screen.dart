@@ -174,7 +174,13 @@ class _HomePageContentState extends State<HomePageContent> {
                 {'title': 'Sci-Fi', 'icon': Icons.rocket_launch_outlined},
               ]),
               const SizedBox(height: 24),
-              const ActivityCard(),
+              ActivityCard(onQuickActivityTap: () {
+              // Find the nearest _HomeScreenState and call its _onNavItemTapped(1)
+              final homeScreenState = context.findAncestorStateOfType<_HomeScreenState>();
+              if (homeScreenState != null) {
+                homeScreenState._onNavItemTapped(1);
+              }
+            }),
               const SizedBox(height: 120),
             ],
           ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/storybook.dart';
 import '../shared/theme.dart' as app_theme;
+import 'package:iofest/screens/storybook_detail_screen.dart';
 
 class StorybookOfTheDayCard extends StatelessWidget {
   final Storybook storybook;
@@ -9,23 +10,32 @@ class StorybookOfTheDayCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: app_theme.kPrimaryLightColor,
-        borderRadius: BorderRadius.circular(app_theme.defaultRadius * 1.5),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildTitle(),
-          // CHANGED: Wrapped the image stack in Padding for the margin
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 18.0),
-            child: _buildImageStack(),
+    return GestureDetector(
+      onTap: () {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => StorybookDetailScreen(storybookId: storybook.id),
           ),
-          _buildStatsRow(),
-        ],
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.only(bottom: 12),
+        decoration: BoxDecoration(
+          color: app_theme.kPrimaryLightColor,
+          borderRadius: BorderRadius.circular(app_theme.defaultRadius * 1.5),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildTitle(),
+            // CHANGED: Wrapped the image stack in Padding for the margin
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 18.0),
+              child: _buildImageStack(),
+            ),
+            _buildStatsRow(),
+          ],
+        ),
       ),
     );
   }
