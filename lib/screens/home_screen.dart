@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:iofest/screens/analytics_screen.dart';
 
 // Screen Imports
 import 'account_screen.dart';
@@ -35,7 +36,7 @@ class _HomeScreenState extends State<HomeScreen> {
     const HomePageContent(), // Index 0
     const QuickActivityScreen(), // <-- 2. REPLACE THE PLACEHOLDER FOR INDEX 1
     const PlaceholderPage(title: 'Create Page'), // Index 2
-    const PlaceholderPage(title: 'Analytics Page'), // Index 3
+    const AnalyticsScreen(),
     const PlaceholderPage(title: 'Dashboard Page'), // Index 4
   ];
 
@@ -175,12 +176,13 @@ class _HomePageContentState extends State<HomePageContent> {
               ]),
               const SizedBox(height: 24),
               ActivityCard(onQuickActivityTap: () {
-              // Find the nearest _HomeScreenState and call its _onNavItemTapped(1)
-              final homeScreenState = context.findAncestorStateOfType<_HomeScreenState>();
-              if (homeScreenState != null) {
-                homeScreenState._onNavItemTapped(1);
-              }
-            }),
+                // Find the nearest _HomeScreenState and call its _onNavItemTapped(1)
+                final homeScreenState =
+                    context.findAncestorStateOfType<_HomeScreenState>();
+                if (homeScreenState != null) {
+                  homeScreenState._onNavItemTapped(1);
+                }
+              }),
               const SizedBox(height: 120),
             ],
           ),
