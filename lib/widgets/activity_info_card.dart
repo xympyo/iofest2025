@@ -2,11 +2,17 @@ import 'package:flutter/material.dart';
 import '../shared/theme.dart' as app_theme;
 
 class ActivityInfoCard extends StatelessWidget {
+  // Data properties
   final String category;
-  final String iconPath;
   final String title;
   final String description;
+
+  // Design properties
   final Color backgroundColor;
+  final String iconPath;
+  final String backgroundShapePath; // The new parameter
+
+  // UI state properties
   final double width;
   final double height;
   final bool isLoading;
@@ -16,10 +22,11 @@ class ActivityInfoCard extends StatelessWidget {
   const ActivityInfoCard({
     super.key,
     required this.category,
-    required this.iconPath,
     required this.title,
     required this.description,
-    this.backgroundColor = const Color(0xffFCEEEC),
+    required this.backgroundColor,
+    required this.iconPath,
+    required this.backgroundShapePath,
     this.width = 280,
     this.height = 400,
     this.isLoading = false,
@@ -29,103 +36,89 @@ class ActivityInfoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
+    if (isLoading) {
+      return SizedBox(
+        width: width,
+        height: height,
+        child: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    return Container(
       width: width,
       height: height,
       decoration: BoxDecoration(
         color: backgroundColor,
         borderRadius: BorderRadius.circular(app_theme.defaultRadius * 1.5),
       ),
-      // Using ClipRRect to make sure the background image respects the border radius
       clipBehavior: Clip.antiAlias,
       child: Stack(
         children: [
-          // The wavy background image
           Positioned(
-            bottom: -30, // Positioned to bleed off the bottom
+            bottom: -30,
             left: -20,
             right: -20,
-            child: Image.asset('assets/images/Intersect.png'),
+            child: Image.asset(backgroundShapePath), // Uses the new parameter
           ),
-
-          // Show close button if enabled
-          if (showClose)
-            Positioned(
-              top: 8,
-              right: 8,
-              child: IconButton(
-                icon: const Icon(Icons.close_rounded, color: Colors.black54, size: 28),
-                splashRadius: 20,
-                onPressed: onClose,
-                tooltip: 'Shuffle again',
-              ),
-            ),
-
-          // The main content of the card
           Padding(
             padding: const EdgeInsets.all(24.0),
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                return SingleChildScrollView(
-                  physics: const NeverScrollableScrollPhysics(),
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                    child: IntrinsicHeight(
-                      child: Column(
-                        children: [
-                          Text(
-                            category,
-                            style: app_theme.teksTextStyle.copyWith(
-                              fontSize: 20,
-                              fontWeight: app_theme.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 18),
-                          Image.asset(
-                            iconPath,
-                            height: 90,
-                            width: 90,
-                          ),
-                          const Spacer(),
-                          Container(
-                            padding: const EdgeInsets.all(20),
-                            decoration: BoxDecoration(
-                              color: app_theme.kWhiteColor.withOpacity(0.7),
-                              borderRadius: BorderRadius.circular(app_theme.defaultRadius),
-                            ),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  title,
-                                  textAlign: TextAlign.center,
-                                  style: app_theme.teksTextStyle.copyWith(
-                                    fontSize: 18,
-                                    fontWeight: app_theme.bold,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  description,
-                                  textAlign: TextAlign.center,
-                                  style: app_theme.teksTextStyle.copyWith(
-                                    fontSize: 14,
-                                    height: 1.5,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+            child: Column(
+              children: [
+                Text(
+                  category,
+                  style: app_theme.teksTextStyle.copyWith(
+                    fontSize: 20,
+                    fontWeight: app_theme.bold,
                   ),
-                );
-              },
+                ),
+                const SizedBox(height: 18),
+                Image.asset(
+                  iconPath,
+                  height: 90,
+                  width: 90,
+                ),
+                const Spacer(),
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: app_theme.kWhiteColor.withOpacity(0.7),
+                    borderRadius: BorderRadius.circular(app_theme.defaultRadius),
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        title,
+                        textAlign: TextAlign.center,
+                        style: app_theme.teksTextStyle.copyWith(
+                          fontSize: 18,
+                          fontWeight: app_theme.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        description,
+                        textAlign: TextAlign.center,
+                        style: app_theme.teksTextStyle.copyWith(
+                          fontSize: 14,
+                          height: 1.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-          )
+          ),
+          if (showClose)
+            Positioned(
+              top: 16,
+              right: 16,
+              child: GestureDetector(
+                onTap: onClose,
+                child: const Icon(Icons.close, size: 28),
+              ),
+            ),
         ],
       ),
     );

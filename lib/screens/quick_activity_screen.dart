@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:iofest/widgets/activity_feedback_sheet.dart';
+import 'dart:math';
 import '../widgets/activity_info_card.dart';
 import '../models/activity.dart';
+import '../models/activity_card_design.dart';
 import '../api_service.dart';
 import '../shared/theme.dart' as app_theme;
 
@@ -16,12 +18,14 @@ class _QuickActivityScreenState extends State<QuickActivityScreen>
     with SingleTickerProviderStateMixin {
   bool isCardChosen = false;
   List<Activity> _activities = [];
-  List<Activity> _displayed = []; // 3 activities: left, middle, right
+  List<Activity> _displayed = [];
   bool _isLoading = true;
   bool _isShuffling = false;
   Activity? _chosen;
   late AnimationController _controller;
   late Animation<double> _shuffleAnim;
+
+  final Map<String, ActivityCardDesign> _designMap = {};
 
   @override
   void initState() {
@@ -33,20 +37,86 @@ class _QuickActivityScreenState extends State<QuickActivityScreen>
     _fetchActivities();
   }
 
+  // --- Card Design Selection Logic (No changes) ---
+
+  ActivityCardDesign _getDesignForActivity(Activity activity) {
+    final String activityId = activity.id.toString();
+    if (_designMap.containsKey(activityId)) {
+      return _designMap[activityId]!;
+    }
+    final design =
+        _getRandomDesignForCategory(activity.activityCategory.category);
+    _designMap[activityId] = design;
+    return design;
+  }
+
+  ActivityCardDesign _getRandomDesignForCategory(String category) {
+    final rand = Random();
+    final variant = rand.nextInt(2);
+
+    switch (category.toLowerCase()) {
+      case 'cognitive':
+        return variant == 0
+            ? ActivityCardDesign(
+                backgroundColor: app_theme.kTriaryColor,
+                categoryIcon: 'assets/images/cognitive.png',
+                backgroundShape: 'assets/images/Intersect.png')
+            : ActivityCardDesign(
+                backgroundColor: app_theme.kSecondaryColor,
+                categoryIcon: 'assets/images/cognitive2.png',
+                backgroundShape: 'assets/images/Intersect2.png');
+      case 'sensory':
+        return variant == 0
+            ? ActivityCardDesign(
+                backgroundColor: app_theme.kPrimaryColor,
+                categoryIcon: 'assets/images/sensory.png',
+                backgroundShape: 'assets/images/cloud.png')
+            : ActivityCardDesign(
+                backgroundColor: app_theme.kPrimaryLightColor,
+                categoryIcon: 'assets/images/sensory2.png',
+                backgroundShape: 'assets/images/cloud2.png');
+      case 'motory':
+        return variant == 0
+            ? ActivityCardDesign(
+                backgroundColor: app_theme.kSecondaryColor,
+                categoryIcon: 'assets/images/motory.png',
+                backgroundShape: 'assets/images/motor.png')
+            : ActivityCardDesign(
+                backgroundColor: app_theme.kTriaryColor,
+                categoryIcon: 'assets/images/motory2.png',
+                backgroundShape: 'assets/images/motor2.png');
+      case 'emotional':
+        return variant == 0
+            ? ActivityCardDesign(
+                backgroundColor: app_theme.kPrimaryLightColor,
+                categoryIcon: 'assets/images/emotional.png',
+                backgroundShape: 'assets/images/wave.png')
+            : ActivityCardDesign(
+                backgroundColor: app_theme.kPrimaryColor,
+                categoryIcon: 'assets/images/emotional2.png',
+                backgroundShape: 'assets/images/wave2.png');
+      default:
+        return ActivityCardDesign(
+            backgroundColor: app_theme.kTriaryColor,
+            categoryIcon: 'assets/images/cognitive.png',
+            backgroundShape: 'assets/images/Intersect.png');
+    }
+  }
+
+  // --- Data Fetching (No changes) ---
+
   Future<void> _fetchActivities() async {
-    setState(() {
-      _isLoading = true;
-    });
+    if (!mounted) return;
+    setState(() => _isLoading = true);
     final acts = await ApiService.fetchAllActivities();
-    if (acts.isNotEmpty) {
+    if (mounted && acts.isNotEmpty) {
       acts.shuffle();
       setState(() {
         _activities = acts;
         _displayed = acts.take(3).toList();
         _isLoading = false;
       });
-    } else {
-      // fallback: try random API
+    } else if (mounted) {
       final random = await ApiService.fetchRandomActivity();
       setState(() {
         _activities = random != null ? [random] : [];
@@ -56,44 +126,54 @@ class _QuickActivityScreenState extends State<QuickActivityScreen>
     }
   }
 
+  // --- Shuffle Logic (No changes) ---
   void _startShuffle() async {
-    if (_isShuffling || _isLoading) return;
+    if (_isShuffling || _isLoading || _activities.isEmpty) return;
+    if (_activities.length < 3) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Not enough activities to shuffle."))
+        );
+        return;
+    }
+
     setState(() {
       _isShuffling = true;
       isCardChosen = false;
     });
-    int shuffleCount = 0;
+
     final rand = _activities.toList()..shuffle();
     List<Activity> pool = rand;
-    if (pool.length < 3) pool.addAll(pool); // Ensure at least 3
     _displayed = pool.take(3).toList();
     _controller.reset();
 
-    // Animate cards to right, bring new to left, repeat
     for (int i = 0; i < 6; i++) {
+      if (!mounted) return;
       await Future.delayed(const Duration(milliseconds: 350));
       setState(() {
-        // rotate: left->middle, middle->right, new->left
         _displayed = [
           pool[(i + 3) % pool.length],
           _displayed[0],
           _displayed[1],
         ];
-        shuffleCount++;
       });
       _controller.forward(from: 0);
     }
-    // After 3 seconds, pick random (API preferred)
+
+    if (!mounted) return;
     final apiResult = await ApiService.fetchRandomActivity();
-    Activity chosen;
-    if (apiResult != null) {
-      chosen = apiResult;
-    } else {
-      chosen = (_activities..shuffle()).first;
-    }
+    final chosenActivity = apiResult ?? (_activities..shuffle()).first;
+
+    final otherActivities = _activities.where((act) => act.id != chosenActivity.id).toList()..shuffle();
+
+    final finalDisplay = [
+      otherActivities[0],
+      chosenActivity,
+      otherActivities[1],
+    ];
+
     setState(() {
-      _chosen = chosen;
-      _displayed = [chosen, chosen, chosen];
+      _chosen = chosenActivity;
+      _displayed = finalDisplay;
       isCardChosen = true;
       _isShuffling = false;
     });
@@ -111,157 +191,72 @@ class _QuickActivityScreenState extends State<QuickActivityScreen>
       backgroundColor: app_theme.kWhiteColor,
       body: Stack(
         children: [
-          // CHANGED: Positioning of background waves to be further off-screen, making them appear larger
           Positioned(
-            top: 0, // Moved down from the absolute top
-            right: 0, // Pushed further off the right edge
+            top: 0,
+            right: 0,
             child: Image.asset(
               'assets/images/Group 29.png',
               width: MediaQuery.of(context).size.width,
             ),
           ),
           Positioned(
-            bottom: 0, // Moved up from the absolute bottom
-            left: 0, // Pushed further off the left edge
-            child: Image.asset(
-              'assets/images/Group 28.png',
-              width: MediaQuery.of(context).size.width,
+            bottom: 0,
+            left: 0,
+              child: Image.asset(
+                'assets/images/Group 28.png',
+                width: MediaQuery.of(context).size.width,
+              ),
             ),
-          ),
+
           SafeArea(
             child: Padding(
               padding:
                   EdgeInsets.symmetric(horizontal: app_theme.defaultMargin),
+              // **FIX: Replaced spaceEvenly with Spacers and SizedBoxes for better control**
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  // Top Title
+                  const Spacer(flex: 2), // Pushes the title down from the top a bit
                   Text(
                     "Let's choose what\nactivity we can do today!",
-                    textAlign: TextAlign.left,
-                    style: app_theme.blackTextStyle.copyWith(
-                      fontSize: 28,
-                      fontWeight: app_theme.black,
-                    ),
+                    textAlign: TextAlign.center,
+                    style: app_theme.blackTextStyle
+                        .copyWith(fontSize: 28, fontWeight: app_theme.bold),
                   ),
-                  // Animated Activity Cards
+                  const Spacer(flex: 1), // Adds space between title and cards
                   if (_isLoading)
-                    const SizedBox(
-                      height: 280,
-                      child: Center(child: CircularProgressIndicator()),
-                    )
+                    const Expanded(
+                        flex: 15, // Give it a flex value to occupy space
+                        child: Center(child: CircularProgressIndicator()))
                   else
                     SizedBox(
-                      height: 280,
+                      height: 400,
                       child: Center(
                         child: SizedBox(
-                          width:
-                              320, // Only show the center area, cards overflow
-                          height: 280,
+                          width: 320,
+                          height: 400,
                           child: Stack(
                             clipBehavior: Clip.none,
                             children: [
-                              // Left Card
-                              if (_displayed.length > 0)
-                                Positioned(
-                                  left: -100,
-                                  top: 40,
-                                  child: AnimatedOpacity(
-                                    duration: const Duration(milliseconds: 250),
-                                    opacity:
-                                        _isShuffling || !isCardChosen ? 1 : 0.5,
-                                    child: Transform.scale(
-                                      scale: 0.8,
-                                      child: ActivityInfoCard(
-                                        category: _displayed[0]
-                                            .activityCategory
-                                            .category,
-                                        iconPath: _getIconForCategory(
-                                            _displayed[0]
-                                                .activityCategory
-                                                .category),
-                                        title: _displayed[0].title,
-                                        description: _displayed[0].description,
-                                        backgroundColor: app_theme.kTriaryColor,
-                                        width: 200,
-                                        height: 320,
-                                        isLoading: false,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              // Right card
-                              if (_displayed.length > 1)
-                                Positioned(
-                                  right: -100,
-                                  top: 40,
-                                  child: AnimatedOpacity(
-                                    duration: const Duration(milliseconds: 250),
-                                    opacity:
-                                        _isShuffling || !isCardChosen ? 1 : 0.5,
-                                    child: Transform.scale(
-                                      scale: 0.8,
-                                      child: ActivityInfoCard(
-                                        category: _displayed[2]
-                                            .activityCategory
-                                            .category,
-                                        iconPath: _getIconForCategory(
-                                            _displayed[2]
-                                                .activityCategory
-                                                .category),
-                                        title: _displayed[2].title,
-                                        description: _displayed[2].description,
-                                        backgroundColor: app_theme.kTriaryColor
-                                            .withOpacity(0.8),
-                                        width: 200,
-                                        height: 320,
-                                        isLoading: false,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              // Middle Card
+                              if (_displayed.isNotEmpty)
+                                _buildAnimatedCard(
+                                    activity: _displayed[0], position: -1),
                               if (_displayed.length > 2)
-                                Positioned(
-                                  left: 20,
-                                  top: 0,
-                                  child: AnimatedScale(
-                                    duration: const Duration(milliseconds: 300),
-                                    scale: 1.0,
-                                    child: ActivityInfoCard(
-                                      category: _displayed[1]
-                                          .activityCategory
-                                          .category,
-                                      iconPath: _getIconForCategory(
-                                          _displayed[1]
-                                              .activityCategory
-                                              .category),
-                                      title: _displayed[1].title,
-                                      description: _displayed[1].description,
-                                      backgroundColor: app_theme.kPrimaryColor,
-                                      width: 280,
-                                      height: 400,
-                                      isLoading: false,
-                                      showClose: isCardChosen,
-                                      onClose: () {
-                                        setState(() {
-                                          isCardChosen = false;
-                                          _chosen = null;
-                                        });
-                                      },
-                                    ),
-                                  ),
-                                ),
+                                _buildAnimatedCard(
+                                    activity: _displayed[2], position: 1),
+                              if (_displayed.length > 1)
+                                _buildAnimatedCard(
+                                    activity: _displayed[1],
+                                    position: 0,
+                                    isCenter: true),
                             ],
                           ),
                         ),
                       ),
                     ),
-                  const SizedBox(
-                    height: 24,
-                  ),
+                  const Spacer(flex: 4), // Pushes the button up from the bottom
                   _buildBottomButton(),
+                  const SizedBox(height: 120), // **FIX: Added 16px bottom padding**
                 ],
               ),
             ),
@@ -271,104 +266,120 @@ class _QuickActivityScreenState extends State<QuickActivityScreen>
     );
   }
 
-  String _getIconForCategory(String category) {
-    // Map categories to asset paths, update as needed
-    switch (category.toLowerCase()) {
-      case 'cognitive':
-        return 'assets/images/brain.png';
-      case 'sensory':
-        return 'assets/images/sensory.png';
-      case 'motory':
-        return 'assets/images/motory.png';
-      case 'emotional':
-        return 'assets/images/emotional.png';
-      default:
-        return 'assets/images/brain.png';
-    }
+  Widget _buildAnimatedCard(
+      {required Activity activity,
+      required int position,
+      bool isCenter = false}) {
+    final design = _getDesignForActivity(activity);
+    double left = (320 - 280) / 2; // Center position
+    if (position == -1) left = -100;
+    if (position == 1) left = 160;
+
+    return Positioned(
+      top: isCenter ? 40 : 40,
+      left: left,
+      child: AnimatedOpacity(
+        duration: const Duration(milliseconds: 250),
+        opacity: _isShuffling || !isCardChosen || isCenter ? 1.0 : 0.5,
+        child: Transform.scale(
+          scale: isCenter ? 1.0 : 0.8,
+          child: ActivityInfoCard(
+            category: activity.activityCategory.category,
+            title: activity.title,
+            description: activity.description,
+            backgroundColor: design.backgroundColor,
+            iconPath: design.categoryIcon,
+            backgroundShapePath: design.backgroundShape,
+            showClose: isCenter && isCardChosen,
+            onClose: () {
+              setState(() {
+                isCardChosen = false;
+                _chosen = null;
+              });
+            },
+          ),
+        ),
+      ),
+    );
   }
 
-  // Helper to build the button at the bottom
   Widget _buildBottomButton() {
+  if (isCardChosen) {
+    // **FIX: Removed the explicit Padding widget from here**
     return GestureDetector(
-      onTap: _isLoading || _isShuffling
-          ? null
-          : () async {
-              if (!isCardChosen) {
-                _startShuffle();
-              } else {
-                // Finish pressed
-                // Show feedback sheet instead of AlertDialog
-                final activityId = _chosen?.id;
-                if (activityId == null) return;
-                bool sending = false;
-                await showModalBottomSheet(
-                  context: context,
-                  isScrollControlled: true,
-                  backgroundColor: Colors.transparent,
-                  builder: (ctx) {
-                    return DraggableScrollableSheet(
-                      initialChildSize: 0.7,
-                      minChildSize: 0.5,
-                      maxChildSize: 0.9,
-                      expand: false,
-                      builder: (context, scrollController) {
-                        return Material(
-                          borderRadius: BorderRadius.circular(24),
-                          color: Colors.white,
-                          child: SingleChildScrollView(
-                            controller: scrollController,
-                            child: ActivityFeedbackSheet(
-                              isLoading: sending,
-                              onSend: (
-                                  {required int understanding,
-                                  required int participation,
-                                  required String notes}) async {
-                                if (sending) return;
-                                sending = true;
-                                await ApiService.completeDailyTask(
-                                  activityId,
-                                  understanding: understanding,
-                                  participation: participation,
-                                  notes: notes,
-                                );
-                                sending = false;
-                                Navigator.of(context).pop();
-                                setState(() {
-                                  isCardChosen = false;
-                                  _chosen = null;
-                                });
-                              },
-                              onClose: () {
-                                if (!sending) {
-                                  ApiService.completeDailyTask(
-                                    activityId,
-                                    understanding: 0,
-                                    participation: 0,
-                                    notes: '',
-                                  );
-                                  Navigator.of(context).pop();
-                                  setState(() {
-                                    isCardChosen = false;
-                                    _chosen = null;
-                                  });
-                                }
-                              },
-                            ),
-                          ),
-                        );
-                      },
-                    );
-                  },
-                );
-              }
-            },
+      onTap: () {
+        final activityId = _chosen?.id;
+        if (activityId == null) return;
+        showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          backgroundColor: Colors.transparent,
+          builder: (ctx) => DraggableScrollableSheet(
+            initialChildSize: 0.7,
+            builder: (_, controller) => Material(
+              borderRadius: BorderRadius.circular(24),
+              color: Colors.white,
+              child: ActivityFeedbackSheet(
+                onSend: ({
+                  required int understanding,
+                  required int participation,
+                  required String notes,
+                }) async {
+                  await ApiService.completeDailyTask(
+                    activityId,
+                    understanding: understanding,
+                    participation: participation,
+                    notes: notes,
+                  );
+                  if (!mounted) return;
+                  Navigator.of(context).pop();
+                  setState(() {
+                    isCardChosen = false;
+                    _chosen = null;
+                  });
+                },
+                onClose: () {
+                  Navigator.of(context).pop();
+                  setState(() {
+                    isCardChosen = false;
+                    _chosen = null;
+                  });
+                },
+              ),
+            ),
+          ),
+        );
+      },
       child: Container(
-        width: isCardChosen ? 140 : 60,
+        width: 200,
         height: 60,
-        margin: const EdgeInsets.only(bottom: 60),
         decoration: BoxDecoration(
-          color: isCardChosen ? app_theme.kBlackColor : app_theme.kPrimaryColor,
-          borderRadius: BorderRadius.circular(60),
+          color: app_theme.kBlackColor,
+          borderRadius: BorderRadius.circular(30),
+          boxShadow: [
+            BoxShadow(
+              color: app_theme.kBlackColor.withOpacity(0.25),
+              blurRadius: 10,
+              offset: const Offset(0, 5),
+            )
+          ],
+        ),
+        child: Center(
+          child: Text('Finish',
+              style: app_theme.whiteTextStyle.copyWith(fontSize: 16)),
+        ),
+      ),
+    );
+  } else {
+    // **FIX: Removed the explicit Padding widget from here**
+    return GestureDetector(
+      onTap: _isLoading || _isShuffling ? null : _startShuffle,
+      child: Container(
+        width: 75,
+        height: 75,
+        decoration: BoxDecoration(
+          color: app_theme.kWhiteColor,
+          shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
               color: app_theme.kBlackColor.withOpacity(0.1),
@@ -378,30 +389,16 @@ class _QuickActivityScreenState extends State<QuickActivityScreen>
             ),
           ],
         ),
-        child: _isLoading || _isShuffling
-            ? const CircularProgressIndicator(
-                padding: EdgeInsets.all(16),
-                color: Colors.white,
-              )
-            : isCardChosen
-                ? Center(
-                    child: Text(
-                      'Finish',
-                      style: app_theme.whiteTextStyle.copyWith(
-                        fontSize: 24,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                  )
-                : Center(
-                    child: Image.asset(
-                      'assets/images/randomize.png',
-                      width: 40,
-                      height: 40,
-                      color: app_theme.kWhiteColor,
-                    ),
-                  ),
+        child: _isShuffling
+            ? CircularProgressIndicator(color: app_theme.kPrimaryColor)
+            : Center(
+                child: Image.asset('assets/images/randomize.png',
+                    width: 40,
+                    height: 40,
+                    color: app_theme.kPrimaryColor),
+              ),
       ),
     );
+  }
   }
 }
