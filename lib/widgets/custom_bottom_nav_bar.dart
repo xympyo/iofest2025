@@ -73,7 +73,7 @@ class CustomBottomNavBar extends StatelessWidget {
         width: 28,
         color: isSelected
             ? app_theme.kBlackColor
-            : app_theme.kPrimaryColor.withOpacity(0.6),
+            : app_theme.kPrimaryColor.withOpacity(1),
         errorBuilder: (context, error, stackTrace) {
           return Icon(Icons.error, color: Colors.red, size: 32);
         },
@@ -82,6 +82,7 @@ class CustomBottomNavBar extends StatelessWidget {
   }
 
   Widget _buildCentralNavItem(String imagePath, int index) {
+    bool isSelected = currentIndex == index;
     // You can also make the central button and its icon larger if you wish
     // For now, we'll keep it as is, but you could change these values.
     return GestureDetector(
@@ -90,11 +91,13 @@ class CustomBottomNavBar extends StatelessWidget {
         height: 60,
         width: 60,
         decoration: BoxDecoration(
-          color: app_theme.kPrimaryColor,
+          color: isSelected
+              ? app_theme.kBlackColor
+              : app_theme.kPrimaryColor.withOpacity(1),
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: app_theme.kPrimaryColor.withOpacity(0.3),
+              color: app_theme.kPrimaryColor.withOpacity(0.4),
               blurRadius: 15,
               offset: const Offset(0, 8),
             )
