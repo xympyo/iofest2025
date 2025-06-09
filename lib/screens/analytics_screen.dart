@@ -3,6 +3,10 @@ import '../api_service.dart';
 import '../models/daily_task_today.dart';
 import '../shared/theme.dart' as app_theme;
 import '../widgets/custom_bottom_nav_bar.dart';
+import '../widgets/ai_analytics_card.dart';
+import 'dart:convert';
+import 'package:flutter/services.dart';
+import 'package:http/http.dart' as http;
 
 class AnalyticsScreen extends StatefulWidget {
   const AnalyticsScreen({Key? key}) : super(key: key);
@@ -12,6 +16,220 @@ class AnalyticsScreen extends StatefulWidget {
 }
 
 class _AnalyticsScreenState extends State<AnalyticsScreen> {
+  Map<String, dynamic>? _aiAnalyticsData;
+  bool _aiAnalyticsLoading = false;
+  String? _aiAnalyticsError;
+
+  Future<void> _generateAiAnalytics() async {
+    setState(() {
+      _aiAnalyticsLoading = true;
+      _aiAnalyticsError = null;
+      _aiAnalyticsData = null;
+    });
+    try {
+      final aiContext = await ApiService.fetchAiContext();
+      if (aiContext == null) throw Exception('No context data');
+      final String analyticsPrompt =
+          '''You are TappyAI, an expert children's learning analytics assistant for parents. Your job is to analyze the provided data and return as many helpful, actionable insights as possible, based on what is available.
+
+Rules:
+1. Respond ONLY in valid JSON with this structure:
+   {
+     "role": "tappyai",
+     "progress_summary": "<summary of the child's recent reading/activity progress, highlight improvements or trends>",
+     "recommendation": "<personalized storybook or activity suggestion, with a brief reason>",
+     "engagement_alert": "<alert if engagement has dropped or a positive streak is achieved, otherwise null>",
+     "reading_streak": "<summary of current reading or activity streak, otherwise null>",
+     "learning_style_inference": "<inferred learning style or preferences based on activity and reading data, otherwise null>",
+     "parent_tip": "<short, actionable tip for the parent, otherwise null>"
+   }
+2. If a field is not applicable or there is not enough data, set its value to null.
+3. Make your language clear, supportive, and parent-friendly.
+4. Use only the data provided below—do not make up information.
+5. Do not include any explanations or text outside the JSON.
+
+Here is the child's data:
+${jsonEncode(aiContext)}''';
+      // Instead of sendToFireworksAI, call Fireworks directly for analytics and get the full response
+      final apiKey =
+          'fw_3ZKRcdUjGQN8ea8kyb8DMZzd'; // Use your actual key or refactor to get from ApiService
+      final url =
+          Uri.parse('https://api.fireworks.ai/inference/v1/chat/completions');
+      final messages = [
+        {"role": "user", "content": analyticsPrompt},
+      ];
+      final body = jsonEncode({
+        "model": "accounts/fireworks/models/llama4-maverick-instruct-basic",
+        "messages": messages,
+        "max_tokens": 131072,
+        "top_p": 1,
+        "top_k": 40,
+        "presence_penalty": 0,
+        "frequency_penalty": 0,
+        "temperature": 0.6,
+      });
+      final response = await http.post(
+        url,
+        headers: {
+          'Authorization': 'Bearer $apiKey',
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: body,
+      );
+      if (response.statusCode != 200)
+        throw Exception('Fireworks error: ' + response.body);
+      final aiResponse = response.body;
+
+      Map<String, dynamic>? analyticsJson;
+      try {
+        print('AI Analytics RAW aiResponse: $aiResponse');
+        // Try to parse as Fireworks full response (choices[0].message.content)
+        final fireworksObj = json.decode(aiResponse);
+        print(
+            'AI Analytics parsed Fireworks object: ' + fireworksObj.toString());
+        final content = fireworksObj['choices']?[0]?['message']?['content'];
+        print('AI Analytics extracted content: $content');
+        if (content is String) {
+          analyticsJson = json.decode(content);
+        } else {
+          throw Exception('No analytics content found in Fireworks response.');
+        }
+      } catch (e) {
+        print('AI Analytics JSON parsing error: $e');
+        setState(() {
+          _aiAnalyticsError = 'Parsing error: ' + e.toString();
+          _aiAnalyticsLoading = false;
+        });
+        return;
+      }
+      setState(() {
+        _aiAnalyticsData = analyticsJson;
+        _aiAnalyticsLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _aiAnalyticsError = 'Could not generate AI insights. Please try again.';
+        _aiAnalyticsLoading = false;
+      });
+    }
+  }
+
+  Widget _buildAiAnalyticsSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(Icons.analytics, color: Color(0xFF5D5A88)),
+            const SizedBox(width: 8),
+            Text('[Beta] AI Analytics',
+                style: app_theme.primaryTextStyle.copyWith(
+                  fontWeight: app_theme.bold,
+                  fontSize: 20,
+                  color: Color(0xFF5D5A88),
+                )),
+          ],
+        ),
+        const SizedBox(height: 8),
+        if (_aiAnalyticsData == null && !_aiAnalyticsLoading)
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Color(0xFFB7AFFF),
+                foregroundColor: Color(0xFF5D5A88),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                padding: const EdgeInsets.symmetric(vertical: 16),
+              ),
+              icon: const Icon(Icons.auto_awesome),
+              label: const Text('Generate AI Insights'),
+              onPressed: _generateAiAnalytics,
+            ),
+          ),
+        if (_aiAnalyticsLoading)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 32),
+            child: Center(child: CircularProgressIndicator()),
+          ),
+        if (_aiAnalyticsError != null)
+          Container(
+            margin: const EdgeInsets.symmetric(vertical: 16),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.red.withOpacity(0.08),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.redAccent),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.error, color: Colors.redAccent),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(_aiAnalyticsError!,
+                      style: app_theme.primaryTextStyle.copyWith(
+                        color: Colors.redAccent,
+                        fontWeight: app_theme.semiBold,
+                      )),
+                ),
+              ],
+            ),
+          ),
+        if (_aiAnalyticsData != null)
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (_aiAnalyticsData!["progress_summary"] != null)
+                AiAnalyticsCard(
+                  title: 'Progress Summary & Highlights',
+                  content: _aiAnalyticsData!["progress_summary"],
+                  icon: Icons.rocket_launch_rounded,
+                  color: Color(0xFFB7AFFF),
+                ),
+              if (_aiAnalyticsData!["recommendation"] != null)
+                AiAnalyticsCard(
+                  title: 'AI Personalized Recommendation',
+                  content: _aiAnalyticsData!["recommendation"],
+                  icon: Icons.tips_and_updates_rounded,
+                  color: Color(0xFFB7AFFF),
+                ),
+              if (_aiAnalyticsData!["engagement_alert"] != null)
+                AiAnalyticsCard(
+                  title: 'Engagement Alert',
+                  content: _aiAnalyticsData!["engagement_alert"],
+                  icon: Icons.warning_amber_rounded,
+                  color: Colors.deepOrangeAccent,
+                  isAlert: true,
+                ),
+              if (_aiAnalyticsData!["reading_streak"] != null)
+                AiAnalyticsCard(
+                  title: 'Reading Streak',
+                  content: _aiAnalyticsData!["reading_streak"],
+                  icon: Icons.auto_graph_rounded,
+                  color: Color(0xFFB7AFFF),
+                ),
+              if (_aiAnalyticsData!["learning_style_inference"] != null)
+                AiAnalyticsCard(
+                  title: 'Learning Style Inference',
+                  content: _aiAnalyticsData!["learning_style_inference"],
+                  icon: Icons.psychology_alt_rounded,
+                  color: Color(0xFFB7AFFF),
+                ),
+              if (_aiAnalyticsData!["parent_tip"] != null)
+                AiAnalyticsCard(
+                  title: 'Parent Tip',
+                  content: _aiAnalyticsData!["parent_tip"],
+                  icon: Icons.lightbulb_rounded,
+                  color: Color(0xFFB7AFFF),
+                ),
+            ],
+          ),
+      ],
+    );
+  }
+
   Future<DailyTaskToday?>? _futureDailyTask;
   int _currentIndex = 3;
 
@@ -80,6 +298,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                     ),
                     const SizedBox(height: 16),
                     _buildTodayActivitySection(uiData),
+                    const SizedBox(height: 24),
+                    _buildAiAnalyticsSection(),
                     const SizedBox(height: 120),
                   ],
                 ),
@@ -200,24 +420,30 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           Row(
             children: [
               Expanded(
-                child: _buildSpentTimeCard(
-                  icon: Icons.timer_outlined,
-                  title: 'Reading Time',
-                  value: data.readingTime,
-                  percentage: data.readingTimeChange,
-                  subLabel: 'vs yesterday',
-                  percentageColor: app_theme.kGreenSafeColor,
+                child: SizedBox(
+                  height: 120,
+                  child: _buildSpentTimeCard(
+                    icon: Icons.timer_outlined,
+                    title: 'Reading Time',
+                    value: data.readingTime,
+                    percentage: data.readingTimeChange,
+                    subLabel: 'vs yesterday',
+                    percentageColor: app_theme.kGreenSafeColor,
+                  ),
                 ),
               ),
               const SizedBox(width: 16),
               Expanded(
-                child: _buildSpentTimeCard(
-                  icon: Icons.visibility_outlined,
-                  title: 'Words Count',
-                  value: data.wordsRead.toString(),
-                  percentage: data.wordsReadChange,
-                  subLabel: 'words read',
-                  percentageColor: app_theme.kGreenSafeColor,
+                child: SizedBox(
+                  height: 120,
+                  child: _buildSpentTimeCard(
+                    icon: Icons.visibility_outlined,
+                    title: 'Words Count',
+                    value: data.wordsRead.toString(),
+                    percentage: data.wordsReadChange,
+                    subLabel: 'words read',
+                    percentageColor: app_theme.kGreenSafeColor,
+                  ),
                 ),
               ),
             ],
@@ -260,7 +486,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                   title,
                   style: app_theme.blackTextStyle.copyWith(
                     fontWeight: app_theme.medium,
-                    fontSize: 13,
+                    fontSize: 12,
                   ),
                 ),
               ),
@@ -270,7 +496,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           Text(
             value,
             style: app_theme.blackTextStyle.copyWith(
-              fontSize: 26,
+              fontSize: 28,
               fontWeight: app_theme.bold,
             ),
           ),
@@ -305,9 +531,19 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   Widget _buildTodayActivitySection(DashboardData data) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF7F7FD),
-        borderRadius: BorderRadius.circular(app_theme.defaultRadius),
+      decoration: ShapeDecoration(
+        color: const Color(0xFFECECFA),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        shadows: [
+          BoxShadow(
+            color: Color(0x3F000000),
+            blurRadius: 12,
+            offset: Offset(0, 4),
+            spreadRadius: 0,
+          )
+        ],
       ),
       child: GridView.builder(
         shrinkWrap: true,
@@ -330,13 +566,24 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   Widget _buildActivityGridCard({required ActivityStat stat}) {
     return Container(
       padding: const EdgeInsets.all(10), // Further reduced padding
-      decoration: BoxDecoration(
+      decoration: ShapeDecoration(
         color: stat.backgroundColor,
-        borderRadius: BorderRadius.circular(app_theme.defaultRadius),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        shadows: [
+          BoxShadow(
+            color: Color(0x3F000000),
+            blurRadius: 12,
+            offset: Offset(0, 4),
+            spreadRadius: 0,
+          )
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
-        mainAxisAlignment: MainAxisAlignment.spaceAround, // Adjusted mainAxisAlignment
+        mainAxisAlignment:
+            MainAxisAlignment.spaceAround, // Adjusted mainAxisAlignment
         children: [
           const Spacer(flex: 1),
           Image.asset(

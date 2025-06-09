@@ -33,7 +33,8 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     setState(() {
       _aiContext = context;
       _messages = [
-        _ChatMessage(isBot: true, text: "Hey! TappyAI here! How can I help you?")
+        _ChatMessage(
+            isBot: true, text: "Hey! TappyAI here! How can I help you?")
       ];
       _initializing = false;
     });
@@ -41,10 +42,12 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
 
   List<Map<String, String>> _toChatHistory() {
     // Convert to Fireworks chat format
-    return _messages.map((m) => {
-      "role": m.isBot ? "tappyai" : "user",
-      "content": m.text,
-    }).toList();
+    return _messages
+        .map((m) => {
+              "role": m.isBot ? "tappyai" : "user",
+              "content": m.text,
+            })
+        .toList();
   }
 
   Future<void> _sendMessage() async {
@@ -68,7 +71,8 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
         chatHistory: _toChatHistory(),
       );
       setState(() {
-        _messages.add(_ChatMessage(isBot: true, text: reply ?? 'Sorry, I could not understand that.'));
+        _messages.add(_ChatMessage(
+            isBot: true, text: reply ?? 'Sorry, I could not understand that.'));
         _loading = false;
       });
       Future.delayed(const Duration(milliseconds: 100), () {
@@ -80,7 +84,8 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
       });
     } catch (e) {
       setState(() {
-        _messages.add(_ChatMessage(isBot: true, text: 'Sorry, there was an error.'));
+        _messages
+            .add(_ChatMessage(isBot: true, text: 'Sorry, there was an error.'));
         _loading = false;
       });
     }
@@ -98,10 +103,11 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: Text('[Beta] TappyAI ChatBot', style: GoogleFonts.poppins(
-          fontWeight: FontWeight.bold,
-          color: const Color(0xFF5D5A88),
-        )),
+        title: Text('[Beta] TappyAI ChatBot',
+            style: GoogleFonts.poppins(
+              fontWeight: FontWeight.bold,
+              color: const Color(0xFF5D5A88),
+            )),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh, color: Color(0xFFB2A4FF)),
@@ -169,15 +175,18 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                             if (_loading && idx == _messages.length) {
                               // Show bot typing indicator
                               return Padding(
-                                padding: const EdgeInsets.symmetric(vertical: 7.0),
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 7.0),
                                 child: Row(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   mainAxisAlignment: MainAxisAlignment.start,
                                   children: [
                                     Padding(
-                                      padding: const EdgeInsets.only(right: 8.0),
+                                      padding:
+                                          const EdgeInsets.only(right: 8.0),
                                       child: CircleAvatar(
-                                        backgroundColor: const Color(0xFFE4E1F7),
+                                        backgroundColor:
+                                            const Color(0xFFE4E1F7),
                                         radius: 24,
                                         child: Icon(Icons.android,
                                             color: Color(0xFFB2A4FF), size: 30),
@@ -226,7 +235,8 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                             final msg = _messages[idx];
                             final isBot = msg.isBot;
                             return Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 7.0),
+                              padding:
+                                  const EdgeInsets.symmetric(vertical: 7.0),
                               child: Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 mainAxisAlignment: isBot
@@ -235,9 +245,11 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                                 children: [
                                   if (isBot)
                                     Padding(
-                                      padding: const EdgeInsets.only(right: 8.0),
+                                      padding:
+                                          const EdgeInsets.only(right: 8.0),
                                       child: CircleAvatar(
-                                        backgroundColor: const Color(0xFFE4E1F7),
+                                        backgroundColor:
+                                            const Color(0xFFE4E1F7),
                                         radius: 24,
                                         child: Icon(Icons.android,
                                             color: Color(0xFFB2A4FF), size: 30),
@@ -252,7 +264,8 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                                         borderRadius: BorderRadius.only(
                                           topLeft: const Radius.circular(18),
                                           topRight: const Radius.circular(18),
-                                          bottomLeft: Radius.circular(isBot ? 0 : 18),
+                                          bottomLeft:
+                                              Radius.circular(isBot ? 0 : 18),
                                           bottomRight:
                                               Radius.circular(isBot ? 18 : 0),
                                         ),
@@ -272,10 +285,11 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                                   ),
                                   if (!isBot)
                                     Padding(
-                                      padding:
-                                          const EdgeInsets.only(left: 8.0, top: 8),
+                                      padding: const EdgeInsets.only(
+                                          left: 8.0, top: 8),
                                       child: CircleAvatar(
-                                        backgroundColor: const Color(0xFFE4E1F7),
+                                        backgroundColor:
+                                            const Color(0xFFE4E1F7),
                                         radius: 18,
                                         child: Icon(Icons.person,
                                             color: Color(0xFF5D5A88), size: 22),
