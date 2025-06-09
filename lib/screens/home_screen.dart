@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:iofest/screens/analytics_screen.dart';
+import 'package:iofest/screens/chatbot_screen.dart';
 
 // Screen Imports
 import 'account_screen.dart';
@@ -35,7 +36,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final List<Widget> _pages = [
     const HomePageContent(), // Index 0
     const QuickActivityScreen(), // <-- 2. REPLACE THE PLACEHOLDER FOR INDEX 1
-    const PlaceholderPage(title: 'Create Page'), // Index 2
+    const ChatbotScreen(),
     const AnalyticsScreen(),
     const PlaceholderPage(title: 'Dashboard Page'), // Index 4
   ];
