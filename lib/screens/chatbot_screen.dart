@@ -101,13 +101,15 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF7F7FD),
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: const Color(0x9F9CCC),
         elevation: 0,
-        title: Text('[Beta] TappyAI ChatBot',
-            style: GoogleFonts.poppins(
-              fontWeight: FontWeight.bold,
-              color: const Color(0xFF5D5A88),
-            )),
+        title: Text(
+          '[Beta] TappyAI ChatBot',
+          style: GoogleFonts.poppins(
+            fontWeight: FontWeight.bold,
+            color: const Color(0xFF5D5A88),
+          ),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh, color: Color(0xFFB2A4FF)),
@@ -152,7 +154,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                       Icon(Icons.android, color: Color(0xFFB2A4FF), size: 32),
                       const SizedBox(width: 12),
                       Text(
-                        '[Beta] TappyAI\nChatBot',
+                        '[Beta] TappyAI ChatBot',
                         style: GoogleFonts.poppins(
                           fontWeight: FontWeight.bold,
                           color: const Color(0xFF5D5A88),
@@ -184,12 +186,10 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                                     Padding(
                                       padding:
                                           const EdgeInsets.only(right: 8.0),
-                                      child: CircleAvatar(
-                                        backgroundColor:
-                                            const Color(0xFFE4E1F7),
-                                        radius: 24,
-                                        child: Icon(Icons.android,
-                                            color: Color(0xFFB2A4FF), size: 30),
+                                      child: Image.asset(
+                                        "assets/images/chatbot.png",
+                                        width: 30,
+                                        height: 30,
                                       ),
                                     ),
                                     Flexible(
@@ -308,6 +308,9 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                     children: [
                       Expanded(
                         child: Container(
+                          margin: const EdgeInsets.only(
+                            bottom: 12,
+                          ),
                           decoration: BoxDecoration(
                             color: const Color(0xFFE4E1F7),
                             borderRadius: BorderRadius.circular(20),
