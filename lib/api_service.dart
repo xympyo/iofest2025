@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'models/storybook.dart';
 import 'models/activity.dart';
@@ -84,7 +83,7 @@ class ApiService {
     required Map<String, dynamic> aiContext,
     required List<Map<String, String>> chatHistory,
   }) async {
-    final apiKey = dotenv.env['FIREWORKS_API_KEY'];
+    final apiKey = 'fw_3ZKRcdUjGQN8ea8kyb8DMZzd';
     if (apiKey == null || apiKey.isEmpty) {
       throw Exception('Fireworks API key not found in .env');
     }
@@ -138,6 +137,7 @@ When the user asks a question, use the data above and your expertise in children
       final data = json.decode(response.body);
       // Fireworks returns choices[0].message.content, which should be JSON
       final String? content = data['choices']?[0]?['message']?['content'];
+      print('FIREWORKS RAW CONTENT: ' + (content ?? 'null'));
       if (content != null && content.trim().startsWith('{')) {
         try {
           final parsed = json.decode(content);
