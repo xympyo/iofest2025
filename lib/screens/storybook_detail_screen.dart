@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:iofest/screens/storybook_content_screen.dart';
 import '../models/storybook.dart';
 import '../api_service.dart';
 import '../shared/theme.dart' as app_theme;
@@ -9,7 +10,8 @@ import '../widgets/custom_bottom_nav_bar.dart';
 
 class StorybookDetailScreen extends StatefulWidget {
   final int storybookId;
-  const StorybookDetailScreen({Key? key, required this.storybookId}) : super(key: key);
+  const StorybookDetailScreen({Key? key, required this.storybookId})
+      : super(key: key);
 
   @override
   State<StorybookDetailScreen> createState() => _StorybookDetailScreenState();
@@ -62,6 +64,7 @@ class _StorybookDetailScreenState extends State<StorybookDetailScreen> {
           // It works perfectly with the new navbar.
           return Stack(
             children: [
+              // Background images and color
               Positioned(
                 top: 0,
                 right: 0,
@@ -78,50 +81,46 @@ class _StorybookDetailScreenState extends State<StorybookDetailScreen> {
                   width: MediaQuery.of(context).size.width,
                 ),
               ),
-              SafeArea(
-                // The SafeArea will now correctly account for the space
-                // taken by the bottom navigation bar.
-                child: LayoutBuilder(
-                  builder: (BuildContext context, BoxConstraints viewportConstraints) {
-                    return SingleChildScrollView(
-                      child: ConstrainedBox(
-                        constraints: BoxConstraints(
-                          minHeight: viewportConstraints.maxHeight,
+              // Scrollable content with bottom padding
+              Positioned.fill(
+                child: SafeArea(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.only(
+                        left: 36,
+                        right: 36,
+                        top: 0,
+                        bottom: 100), // enough bottom padding for nav bar
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Positioned(
+                          top: 0,
+                          left: 0,
+                          child: SafeArea(child: _buildHeader(context)),
                         ),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 36.0),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              Column(
-                                children: [
-                                  _buildHeader(context),
-                                  const SizedBox(height: 24),
-                                  Text(
-                                    storybook.title,
-                                    textAlign: TextAlign.center,
-                                    style: app_theme.blackTextStyle.copyWith(fontSize: 28, fontWeight: FontWeight.bold),
-                                  ),
-                                  const SizedBox(height: 24),
-                                  _buildCoverSection(storybook),
-                                  const SizedBox(height: 30 + 24),
-                                  _buildDescription(storybook.description),
-                                ],
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.only(top: 24.0),
-                                // We remove the bottom padding here because the navbar's own margin/height handles it.
-                                child: _buildAboutSection(storybook),
-                              ),
-                            ],
-                          ),
+                        const SizedBox(
+                            height: 32), // spacing for back button overlap
+                        Text(
+                          storybook.title,
+                          textAlign: TextAlign.center,
+                          style: app_theme.blackTextStyle.copyWith(
+                              fontSize: 28, fontWeight: FontWeight.bold),
                         ),
-                      ),
-                    );
-                  },
+                        const SizedBox(height: 24),
+                        _buildCoverSection(storybook),
+                        const SizedBox(height: 30 + 24),
+                        _buildDescription(storybook.description),
+                        Padding(
+                          padding: const EdgeInsets.only(top: 24.0),
+                          child: _buildAboutSection(storybook),
+                        ),
+                        const SizedBox(height: 24),
+                      ],
+                    ),
+                  ),
                 ),
               ),
+              // Fixed back button (overlaps content)
             ],
           );
         },
@@ -143,7 +142,8 @@ class _StorybookDetailScreenState extends State<StorybookDetailScreen> {
               color: app_theme.kPrimaryLightColor,
               borderRadius: BorderRadius.circular(14),
             ),
-            child: Image.asset('assets/images/back arrow.png', width: 24, height: 24),
+            child: Image.asset('assets/images/back arrow.png',
+                width: 24, height: 24),
           ),
         ),
       ],
@@ -196,7 +196,18 @@ class _StorybookDetailScreenState extends State<StorybookDetailScreen> {
                   ),
                 ],
               ),
-              child: Icon(Icons.play_arrow_rounded, color: app_theme.kPrimaryColor, size: 50),
+              child: GestureDetector(
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          StorybookContentScreen(storybookId: storybook.id),
+                    ),
+                  );
+                },
+                child: Icon(Icons.play_arrow_rounded,
+                    color: app_theme.kPrimaryColor, size: 50),
+              ),
             ),
           ),
         ],
@@ -209,7 +220,8 @@ class _StorybookDetailScreenState extends State<StorybookDetailScreen> {
       description,
       textAlign: TextAlign.center,
       style: app_theme.primaryTextStyle.copyWith(
-        fontSize: 16,
+        fontSize: 20,
+        fontWeight: app_theme.bold,
         color: app_theme.kBlackColor.withOpacity(0.7),
         height: 1.5,
       ),
@@ -219,16 +231,27 @@ class _StorybookDetailScreenState extends State<StorybookDetailScreen> {
   Widget _buildAboutSection(Storybook storybook) {
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: app_theme.kPrimaryLightColor,
-        borderRadius: BorderRadius.circular(20),
+      decoration: ShapeDecoration(
+        color: const Color(0xFFECECFA),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        shadows: [
+          BoxShadow(
+            color: Color(0x3F000000),
+            blurRadius: 12,
+            offset: Offset(0, 4),
+            spreadRadius: 0,
+          )
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             'About Storybook',
-            style: app_theme.blackTextStyle.copyWith(fontSize: 18, fontWeight: app_theme.bold),
+            style: app_theme.blackTextStyle
+                .copyWith(fontSize: 18, fontWeight: app_theme.bold),
           ),
           const SizedBox(height: 16),
           Row(
@@ -255,27 +278,44 @@ class _StorybookDetailScreenState extends State<StorybookDetailScreen> {
     );
   }
 
-  Widget _buildInfoPill({required IconData icon, required String value, required String label}) {
+  Widget _buildInfoPill(
+      {required IconData icon, required String value, required String label}) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-      decoration: BoxDecoration(
+      decoration: ShapeDecoration(
         color: app_theme.kWhiteColor,
-        borderRadius: BorderRadius.circular(16),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        shadows: [
+          BoxShadow(
+            color: Color(0x3F000000),
+            blurRadius: 12,
+            offset: Offset(0, 4),
+            spreadRadius: 0,
+          )
+        ],
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(icon, color: app_theme.kBlackColor, size: 16),
               const SizedBox(width: 8),
-              Text(label, style: app_theme.blackTextStyle.copyWith(fontSize: 12, fontWeight: app_theme.bold)),
+              Text(
+                label,
+                style: app_theme.blackTextStyle
+                    .copyWith(fontSize: 12, fontWeight: app_theme.bold),
+              ),
             ],
           ),
           const SizedBox(height: 8),
           Text(
             value,
-            style: app_theme.blackTextStyle.copyWith(fontSize: 22, fontWeight: app_theme.bold),
+            style: app_theme.blackTextStyle
+                .copyWith(fontSize: 24, fontWeight: app_theme.black),
           ),
         ],
       ),
