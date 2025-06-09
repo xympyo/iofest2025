@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../api_service.dart';
 import '../models/daily_task_today.dart';
 import '../shared/theme.dart' as app_theme;
+import '../widgets/custom_bottom_nav_bar.dart';
 
 class AnalyticsScreen extends StatefulWidget {
   const AnalyticsScreen({Key? key}) : super(key: key);
@@ -11,198 +12,78 @@ class AnalyticsScreen extends StatefulWidget {
 }
 
 class _AnalyticsScreenState extends State<AnalyticsScreen> {
-  Future<DailyTaskToday?>? _future;
+  Future<DailyTaskToday?>? _futureDailyTask;
+  int _currentIndex = 3;
 
   @override
   void initState() {
     super.initState();
-    _future = ApiService.fetchDailyTaskToday();
+    _futureDailyTask = ApiService.fetchDailyTaskToday();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: app_theme.kWhiteColor,
+      bottomNavigationBar: CustomBottomNavBar(
+        currentIndex: _currentIndex,
+        onTap: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
+      ),
       body: SafeArea(
+        bottom: false,
         child: FutureBuilder<DailyTaskToday?>(
-          future: _future,
+          future: _futureDailyTask,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator());
             }
             if (snapshot.hasError) {
-              return const Center(child: Text('Failed to load analytics data'));
+              return Center(
+                  child: Text('Failed to load data: ${snapshot.error}'));
             }
-            final data = snapshot.data ?? DailyTaskToday(
-              readingTime: 0,
-              wordsCount: 0,
-              cognitiveCount: 0,
-              sensoryCount: 0,
-              motorCount: 0,
-              emotionalCount: 0,
-              activities: [],
-            );
-            return CustomScrollView(
-              slivers: [
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(
-                        horizontal: app_theme.defaultMargin, vertical: 16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.arrow_back_ios_new_rounded),
-                          onPressed: () => Navigator.of(context).pop(),
-                          color: app_theme.kBlackColor,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          "You're doing\ngreat!",
-                          style: app_theme.blackTextStyle.copyWith(
-                            fontSize: 22,
-                            fontWeight: app_theme.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: app_theme.kPrimaryLightColor,
-                            borderRadius:
-                                BorderRadius.circular(app_theme.defaultRadius),
-                            boxShadow: [
-                              BoxShadow(
-                                color:
-                                    app_theme.kPrimaryColor.withOpacity(0.06),
-                                blurRadius: 12,
-                                offset: const Offset(0, 4),
-                              )
-                            ],
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'You spent',
-                                style: app_theme.primaryTextStyle.copyWith(
-                                  fontWeight: app_theme.bold,
-                                  fontSize: 18,
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              Row(
-                                children: [
-                                  _AnalyticsStatCard(
-                                    title: 'Reading Time',
-                                    value: _formatReadingTime(data.readingTime),
-                                    subtitle: '',
-                                    icon: Icons.schedule,
-                                    valueColor: Colors.black,
-                                    delta: null,
-                                  ),
-                                  const SizedBox(width: 16),
-                                  _AnalyticsStatCard(
-                                    title: 'Words Count',
-                                    value: data.wordsCount?.toString() ?? '0',
-                                    subtitle: 'words read',
-                                    icon: Icons.remove_red_eye_outlined,
-                                    valueColor: Colors.black,
-                                    delta: null,
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                        Text(
-                          'Your activity today!',
-                          style: app_theme.blackTextStyle.copyWith(
-                            fontSize: 20,
-                            fontWeight: app_theme.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        _ActivityBento(
-                          cognitive: data.cognitiveCount,
-                          sensory: data.sensoryCount,
-                          motor: data.motorCount,
-                          emotional: data.emotionalCount,
-                        ),
-                        const SizedBox(height: 24),
-                        Text(
-                          'Activities Completed',
-                          style: app_theme.primaryTextStyle.copyWith(
-                            fontWeight: app_theme.bold,
-                            fontSize: 18,
-                          ),
-                        ),
-                      ],
+
+            final realData = snapshot.data ??
+                DailyTaskToday(
+                  readingTime: 0,
+                  wordsCount: 0,
+                  cognitiveCount: 0,
+                  sensoryCount: 0,
+                  motorCount: 0,
+                  emotionalCount: 0,
+                  activities: [],
+                );
+
+            final uiData = _mapRealDataToUIData(realData);
+
+            return SingleChildScrollView(
+              child: Padding(
+                padding:
+                    EdgeInsets.symmetric(horizontal: app_theme.defaultMargin),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 16),
+                    _buildHeader(),
+                    const SizedBox(height: 24),
+                    _buildSpentTimeSection(uiData),
+                    const SizedBox(height: 24),
+                    Text(
+                      'Your activity today!',
+                      style: app_theme.blackTextStyle.copyWith(
+                        fontSize: 22,
+                        fontWeight: app_theme.bold,
+                      ),
                     ),
-                  ),
+                    const SizedBox(height: 16),
+                    _buildTodayActivitySection(uiData),
+                    const SizedBox(height: 120),
+                  ],
                 ),
-                SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, idx) {
-                      final act = data.activities[idx];
-                      return Padding(
-                        padding: EdgeInsets.symmetric(
-                            horizontal: app_theme.defaultMargin, vertical: 8),
-                        child: Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius:
-                                BorderRadius.circular(app_theme.defaultRadius),
-                            boxShadow: [
-                              BoxShadow(
-                                color:
-                                    app_theme.kPrimaryColor.withOpacity(0.08),
-                                blurRadius: 8,
-                                offset: const Offset(0, 4),
-                              )
-                            ],
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                act['activity']?['title'] ?? '-',
-                                style: app_theme.primaryTextStyle.copyWith(
-                                  fontWeight: app_theme.bold,
-                                  fontSize: 16,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                act['activity']?['description'] ?? '',
-                                style: app_theme.teksTextStyle
-                                    .copyWith(fontSize: 13),
-                              ),
-                              const SizedBox(height: 8),
-                              Row(
-                                children: [
-                                  Icon(Icons.check_circle_rounded,
-                                      color: app_theme.kPrimaryColor, size: 18),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    'Done at: ' + (act['completed_at'] ?? '-'),
-                                    style: app_theme.primaryTextStyle
-                                        .copyWith(fontSize: 12),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                    childCount: data.activities.length,
-                  ),
-                ),
-                SliverToBoxAdapter(child: SizedBox(height: 80)),
-              ],
+              ),
             );
           },
         ),
@@ -210,164 +91,300 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     );
   }
 
-  String _formatReadingTime(int? minutes) {
-    if (minutes == null) return '0m';
-    final h = minutes ~/ 60;
-    final m = minutes % 60;
-    if (h > 0) {
-      return '${h}h ${m}m';
+  DashboardData _mapRealDataToUIData(DailyTaskToday realData) {
+    String formattedReadingTime = '0m';
+    if (realData.readingTime != null && realData.readingTime! > 0) {
+      final h = realData.readingTime! ~/ 60;
+      final m = realData.readingTime! % 60;
+      if (h > 0) {
+        formattedReadingTime = '${h}h ${m}m';
+      } else {
+        formattedReadingTime = '${m}m';
+      }
     }
-    return '${m}m';
+
+    return DashboardData(
+      readingTime: formattedReadingTime,
+      wordsRead: realData.wordsCount ?? 0,
+      readingTimeChange: 0.0,
+      wordsReadChange: 0.0,
+      activityStats: [
+        ActivityStat(
+            categoryName: 'Cognitive',
+            iconPath: 'assets/images/cognitive.png',
+            activitiesDone: realData.cognitiveCount,
+            timeSpent: '0m',
+            backgroundColor: app_theme.kTriaryColor,
+            textColor: const Color(0xffE59690)),
+        ActivityStat(
+            categoryName: 'Sensory',
+            iconPath: 'assets/images/sensory.png',
+            activitiesDone: realData.sensoryCount,
+            timeSpent: '0m',
+            backgroundColor: app_theme.kPrimaryColor,
+            textColor: app_theme.kWhiteColor),
+        ActivityStat(
+            categoryName: 'Motor',
+            iconPath: 'assets/images/motory.png',
+            activitiesDone: realData.motorCount,
+            timeSpent: '0m',
+            backgroundColor: app_theme.kSecondaryColor,
+            textColor: const Color(0xff9B443B)),
+        ActivityStat(
+            categoryName: 'Emotional',
+            iconPath: 'assets/images/emotional.png',
+            activitiesDone: realData.emotionalCount,
+            timeSpent: '0m',
+            backgroundColor: app_theme.kPrimaryLightColor,
+            textColor: const Color(0xff8686C2)),
+      ],
+    );
   }
-}
 
-class _AnalyticsStatCard extends StatelessWidget {
-  final String title;
-  final String value;
-  final String subtitle;
-  final IconData icon;
-  final Color valueColor;
-  final double? delta;
-
-  const _AnalyticsStatCard({
-    required this.title,
-    required this.value,
-    required this.subtitle,
-    required this.icon,
-    required this.valueColor,
-    this.delta,
-    Key? key,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.03),
-              blurRadius: 6,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(icon, color: app_theme.kPrimaryColor, size: 20),
-                const SizedBox(width: 8),
-                Text(
-                  title,
-                  style: app_theme.primaryTextStyle.copyWith(
-                    fontWeight: app_theme.semiBold,
-                    fontSize: 13,
-                  ),
-                ),
+  Widget _buildHeader() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        GestureDetector(
+          onTap: () => Navigator.of(context).pop(),
+          child: Container(
+            width: 52,
+            height: 52,
+            decoration: BoxDecoration(
+              color: app_theme.kPrimaryLightColor,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 10,
+                )
               ],
             ),
-            const SizedBox(height: 8),
-            Text(
-              value,
-              style: app_theme.primaryTextStyle.copyWith(
-                fontWeight: app_theme.bold,
-                fontSize: 22,
-                color: valueColor,
-              ),
+            child: Center(
+              child: Image.asset('assets/images/back arrow.png', width: 24),
             ),
-            if (subtitle.isNotEmpty)
-              Text(
-                subtitle,
-                style: app_theme.teksTextStyle.copyWith(fontSize: 12),
-              ),
-            if (delta != null)
-              Text(
-                (delta! > 0 ? '+' : '') +
-                    (delta! * 100).toStringAsFixed(1) +
-                    '%',
-                style: TextStyle(
-                  color: delta! > 0 ? Colors.green : Colors.red,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 12,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          "You're doing great!",
+          textAlign: TextAlign.center,
+          style: app_theme.blackTextStyle.copyWith(
+            fontSize: 28,
+            fontWeight: app_theme.bold,
+            height: 1.2,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSpentTimeSection(DashboardData data) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF7F7FD),
+        borderRadius: BorderRadius.circular(app_theme.defaultRadius),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'You spent',
+            style: app_theme.blackTextStyle.copyWith(
+              fontSize: 22,
+              fontWeight: app_theme.bold,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: _buildSpentTimeCard(
+                  icon: Icons.timer_outlined,
+                  title: 'Reading Time',
+                  value: data.readingTime,
+                  percentage: data.readingTimeChange,
+                  subLabel: 'vs yesterday',
+                  percentageColor: app_theme.kGreenSafeColor,
                 ),
               ),
-          ],
-        ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: _buildSpentTimeCard(
+                  icon: Icons.visibility_outlined,
+                  title: 'Words Count',
+                  value: data.wordsRead.toString(),
+                  percentage: data.wordsReadChange,
+                  subLabel: 'words read',
+                  percentageColor: app_theme.kGreenSafeColor,
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
-}
 
-class _ActivityBento extends StatelessWidget {
-  final int cognitive;
-  final int sensory;
-  final int motor;
-  final int emotional;
-  const _ActivityBento({
-    required this.cognitive,
-    required this.sensory,
-    required this.motor,
-    required this.emotional,
-    Key? key,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildSpentTimeCard({
+    required IconData icon,
+    required String title,
+    required String value,
+    required double percentage,
+    required String subLabel,
+    required Color percentageColor,
+  }) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: app_theme.kPrimaryLightColor,
-        borderRadius: BorderRadius.circular(app_theme.defaultRadius * 1.5),
+        color: app_theme.kWhiteColor,
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: app_theme.kPrimaryColor.withOpacity(0.06),
-            blurRadius: 10,
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 15,
             offset: const Offset(0, 4),
           )
         ],
       ),
-      child: GridView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 16, color: app_theme.kBlackColor),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  title,
+                  style: app_theme.blackTextStyle.copyWith(
+                    fontWeight: app_theme.medium,
+                    fontSize: 13,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            value,
+            style: app_theme.blackTextStyle.copyWith(
+              fontSize: 26,
+              fontWeight: app_theme.bold,
+            ),
+          ),
+          if (percentage != 0) ...{
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                Text(
+                  '${percentage.toStringAsFixed(1)}%',
+                  style: TextStyle(
+                    color: percentageColor,
+                    fontWeight: app_theme.semiBold,
+                    fontSize: 12,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  subLabel,
+                  style: app_theme.blackTextStyle.copyWith(
+                    fontSize: 12,
+                    fontWeight: app_theme.regular,
+                  ),
+                ),
+              ],
+            ),
+          },
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTodayActivitySection(DashboardData data) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF7F7FD),
+        borderRadius: BorderRadius.circular(app_theme.defaultRadius),
+      ),
+      child: GridView.builder(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
+        itemCount: data.activityStats.length,
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
-          childAspectRatio: 1.3,
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
+          crossAxisSpacing: 16,
+          mainAxisSpacing: 16,
+          childAspectRatio: 0.92, // Slightly adjusted aspect ratio
         ),
+        itemBuilder: (context, index) {
+          final stat = data.activityStats.elementAt(index);
+          return _buildActivityGridCard(stat: stat);
+        },
+      ),
+    );
+  }
+
+  Widget _buildActivityGridCard({required ActivityStat stat}) {
+    return Container(
+      padding: const EdgeInsets.all(10), // Further reduced padding
+      decoration: BoxDecoration(
+        color: stat.backgroundColor,
+        borderRadius: BorderRadius.circular(app_theme.defaultRadius),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.spaceAround, // Adjusted mainAxisAlignment
         children: [
-          _BentoCard(
-            label: 'Cognitive',
-            count: cognitive,
-            color: const Color(0xFFFCEEEC),
-            icon: Icons.psychology_alt_outlined,
-            minutes: cognitive > 0 ? '12m Done' : '0m Done',
+          const Spacer(flex: 1),
+          Image.asset(
+            stat.iconPath,
+            width: 30,
+            height: 30,
+            errorBuilder: (context, error, stackTrace) =>
+                const Icon(Icons.error),
           ),
-          _BentoCard(
-            label: 'Sensory',
-            count: sensory,
-            color: const Color(0xFFEAEAFF),
-            icon: Icons.pan_tool_alt_outlined,
-            minutes: sensory > 0 ? '16m Done' : '0m Done',
+          const SizedBox(height: 4),
+          Text(
+            stat.categoryName,
+            textAlign: TextAlign.center,
+            style: app_theme.whiteTextStyle.copyWith(
+              color: stat.textColor.withOpacity(0.8),
+              fontSize: 11,
+              fontWeight: app_theme.medium,
+            ),
           ),
-          _BentoCard(
-            label: 'Motor',
-            count: motor,
-            color: const Color(0xFFFCEEEC),
-            icon: Icons.access_alarm,
-            minutes: motor > 0 ? '4m Done' : '0m Done',
+          const SizedBox(height: 2),
+          Text(
+            stat.activitiesDone.toString(),
+            style: app_theme.whiteTextStyle.copyWith(
+              color: stat.textColor,
+              fontSize: 34, // Further reduced font size
+              fontWeight: app_theme.bold,
+            ),
           ),
-          _BentoCard(
-            label: 'Emotional',
-            count: emotional,
-            color: const Color(0xFFEAEAFF),
-            icon: Icons.favorite_border,
-            minutes: emotional > 0 ? '8m Done' : '0m Done',
+          Text(
+            'Done',
+            style: app_theme.whiteTextStyle.copyWith(
+              color: stat.textColor,
+              fontSize: 20, // Further reduced font size
+              fontWeight: app_theme.bold,
+              height: 1.0,
+            ),
+          ),
+          const Spacer(flex: 1),
+          Align(
+            alignment: Alignment.bottomLeft,
+            child: Text(
+              '${stat.timeSpent} Done',
+              style: app_theme.whiteTextStyle.copyWith(
+                color: stat.textColor.withOpacity(0.8),
+                fontSize: 9,
+                fontWeight: app_theme.medium,
+              ),
+            ),
           ),
         ],
       ),
@@ -375,55 +392,36 @@ class _ActivityBento extends StatelessWidget {
   }
 }
 
-class _BentoCard extends StatelessWidget {
-  final String label;
-  final int count;
-  final Color color;
-  final IconData icon;
-  final String minutes;
-  const _BentoCard({
-    required this.label,
-    required this.count,
-    required this.color,
-    required this.icon,
-    required this.minutes,
-    Key? key,
-  }) : super(key: key);
+class DashboardData {
+  final String readingTime;
+  final double readingTimeChange;
+  final int wordsRead;
+  final double wordsReadChange;
+  final List<ActivityStat> activityStats;
 
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(18),
-      ),
-      padding: const EdgeInsets.all(18),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, color: app_theme.kPrimaryColor, size: 28),
-          const SizedBox(height: 6),
-          Text(
-            '$count',
-            style: app_theme.primaryTextStyle.copyWith(
-              fontWeight: app_theme.bold,
-              fontSize: 22,
-            ),
-          ),
-          Text(
-            'Done',
-            style: app_theme.primaryTextStyle.copyWith(
-              fontWeight: app_theme.semiBold,
-              fontSize: 16,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            minutes,
-            style: app_theme.teksTextStyle.copyWith(fontSize: 12),
-          ),
-        ],
-      ),
-    );
-  }
+  DashboardData({
+    required this.readingTime,
+    required this.readingTimeChange,
+    required this.wordsRead,
+    required this.wordsReadChange,
+    required this.activityStats,
+  });
+}
+
+class ActivityStat {
+  final String categoryName;
+  final String iconPath;
+  final int activitiesDone;
+  final String timeSpent;
+  final Color backgroundColor;
+  final Color textColor;
+
+  ActivityStat({
+    required this.categoryName,
+    required this.iconPath,
+    required this.activitiesDone,
+    required this.timeSpent,
+    required this.backgroundColor,
+    required this.textColor,
+  });
 }
