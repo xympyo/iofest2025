@@ -118,10 +118,14 @@ When the user asks a question, use the data above and your expertise in children
     ];
 
     final body = jsonEncode({
-      "model": "accounts/fireworks/models/llama-v4-maverick-8b-instruct",
+      "model": "accounts/fireworks/models/llama4-maverick-instruct-basic",
       "messages": messages,
-      "max_tokens": 512,
-      "temperature": 0.7,
+      "max_tokens": 131072,
+      "top_p": 1,
+      "top_k": 40,
+      "presence_penalty": 0,
+      "frequency_penalty": 0,
+      "temperature": 0.6,
     });
 
     final response = await http.post(
@@ -133,6 +137,8 @@ When the user asks a question, use the data above and your expertise in children
       },
       body: body,
     );
+    print('FIREWORKS STATUS: ' + response.statusCode.toString());
+    print('FIREWORKS BODY: ' + response.body);
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
       // Fireworks returns choices[0].message.content, which should be JSON
