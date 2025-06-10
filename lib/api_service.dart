@@ -84,7 +84,7 @@ class ApiService {
     required List<Map<String, String>> chatHistory,
   }) async {
     final apiKey = 'fw_3ZKRcdUjGQN8ea8kyb8DMZzd';
-    if (apiKey == null || apiKey.isEmpty) {
+    if (apiKey.isEmpty) {
       throw Exception('Fireworks API key not found in .env');
     }
     final url = Uri.parse('https://api.fireworks.ai/inference/v1/chat/completions');
@@ -143,7 +143,9 @@ When the user asks a question, use the data above and your expertise in children
       final data = json.decode(response.body);
       // Fireworks returns choices[0].message.content, which should be JSON
       final String? content = data['choices']?[0]?['message']?['content'];
-      print('FIREWORKS RAW CONTENT: ' + (content ?? 'null'));
+      // ignore: avoid_print
+    // Use a logging framework in production, e.g., logger
+    print('FIREWORKS RAW CONTENT: ${content ?? 'null'}');
       if (content != null && content.trim().startsWith('{')) {
         try {
           final parsed = json.decode(content);
