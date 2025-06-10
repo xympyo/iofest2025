@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:iofest/screens/analytics_screen.dart';
 import 'package:iofest/screens/chatbot_screen.dart';
+import 'package:iofest/screens/more_screen.dart';
 
 // Screen Imports
 import 'account_screen.dart';
@@ -38,7 +39,7 @@ class _HomeScreenState extends State<HomeScreen> {
     const QuickActivityScreen(), // <-- 2. REPLACE THE PLACEHOLDER FOR INDEX 1
     const ChatbotScreen(),
     const AnalyticsScreen(),
-    const PlaceholderPage(title: 'Dashboard Page'), // Index 4
+    const MoreScreen(), // Index 4
   ];
 
   void _onNavItemTapped(int index) {
