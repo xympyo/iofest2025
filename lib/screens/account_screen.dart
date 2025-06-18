@@ -64,7 +64,7 @@ class AccountScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Moshe Dayan',
+                  'Adeliazh',
                   style: app_theme.blackTextStyle.copyWith(
                     fontSize: 24,
                     fontWeight: app_theme.bold,
@@ -72,7 +72,7 @@ class AccountScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '@xympyo',
+                  'adelia17@gmail.com',
                   style: app_theme.primaryTextStyle.copyWith(
                     color: app_theme.kBlackColor.withOpacity(0.6),
                     fontSize: 16,

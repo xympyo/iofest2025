@@ -63,7 +63,7 @@ class ApiService {
   // Fetches the AI context from the backend (requires Bearer token)
   static Future<Map<String, dynamic>?> fetchAiContext() async {
     final token = await getToken();
-    final url = Uri.parse('https://pleasant-polecat-deciding.ngrok-free.app/api/v1/ai-context');
+    final url = Uri.parse('http://10.0.2.2:8000/api/v1/ai-context');
     final response = await http.get(
       url,
       headers: {
@@ -87,9 +87,11 @@ class ApiService {
     if (apiKey.isEmpty) {
       throw Exception('Fireworks API key not found in .env');
     }
-    final url = Uri.parse('https://api.fireworks.ai/inference/v1/chat/completions');
+    final url =
+        Uri.parse('https://api.fireworks.ai/inference/v1/chat/completions');
     // System prompt per your requirements
-    final systemPrompt = '''You are TappyAI, an expert children's education assistant for a storybook app.
+    final systemPrompt =
+        '''You are TappyAI, an expert children's education assistant for a storybook app.
 You must always follow these rules:
 
 1. All your responses must be valid JSON, and nothing else. No explanations, no markdown, no extra text.
@@ -144,8 +146,8 @@ When the user asks a question, use the data above and your expertise in children
       // Fireworks returns choices[0].message.content, which should be JSON
       final String? content = data['choices']?[0]?['message']?['content'];
       // ignore: avoid_print
-    // Use a logging framework in production, e.g., logger
-    print('FIREWORKS RAW CONTENT: ${content ?? 'null'}');
+      // Use a logging framework in production, e.g., logger
+      print('FIREWORKS RAW CONTENT: ${content ?? 'null'}');
       if (content != null && content.trim().startsWith('{')) {
         try {
           final parsed = json.decode(content);
@@ -163,8 +165,9 @@ When the user asks a question, use the data above and your expertise in children
   }
 
   // Log storybook read with rating and comments
-  static Future<bool> logStorybookRead({required int idStorybook, int rating = 1, String? comments}) async {
-    final url = Uri.parse('https://pleasant-polecat-deciding.ngrok-free.app/api/v1/storybook-reads');
+  static Future<bool> logStorybookRead(
+      {required int idStorybook, int rating = 1, String? comments}) async {
+    final url = Uri.parse('http://10.0.2.2:8000/api/v1/storybook-reads');
     final Map<String, dynamic> body = {
       'id_storybook': idStorybook,
       'rating': rating,
@@ -185,8 +188,9 @@ When the user asks a question, use the data above and your expertise in children
   }
 
   // Fetch raw JSON for storybook content screen
-  static Future<Map<String, dynamic>?> fetchStorybookRawById(int storybookId) async {
-    final url = Uri.parse('https://pleasant-polecat-deciding.ngrok-free.app/api/v1/storybook/$storybookId');
+  static Future<Map<String, dynamic>?> fetchStorybookRawById(
+      int storybookId) async {
+    final url = Uri.parse('http://10.0.2.2:8000/api/v1/storybook/$storybookId');
     final response = await http.get(url);
     if (response.statusCode == 200) {
       return json.decode(response.body) as Map<String, dynamic>;
@@ -198,7 +202,7 @@ When the user asks a question, use the data above and your expertise in children
   /// Fetch today's daily task analytics
   static Future<DailyTaskToday?> fetchDailyTaskToday() async {
     final token = await getToken();
-    final url = Uri.parse('https://pleasant-polecat-deciding.ngrok-free.app/api/v1/daily-tasks/today/full');
+    final url = Uri.parse('http://10.0.2.2:8000/api/v1/daily-tasks/today/full');
     try {
       final response = await http.get(
         url,
@@ -210,7 +214,8 @@ When the user asks a question, use the data above and your expertise in children
       if (response.statusCode == 200) {
         final jsonData = json.decode(response.body);
         // The API returns { "daily_tasks": [ ... ] } so extract the first element
-        if (jsonData['daily_tasks'] != null && (jsonData['daily_tasks'] as List).isNotEmpty) {
+        if (jsonData['daily_tasks'] != null &&
+            (jsonData['daily_tasks'] as List).isNotEmpty) {
           return DailyTaskToday.fromJson(jsonData['daily_tasks'][0]);
         }
       }
@@ -330,8 +335,7 @@ When the user asks a question, use the data above and your expertise in children
   }
 
   // Use 10.0.2.2 for Android emulator, change to your LAN IP if using a real device
-  static const String baseUrl =
-      'https://pleasant-polecat-deciding.ngrok-free.app/api/v1';
+  static const String baseUrl = 'http://10.0.2.2:8000/api/v1';
 
   // Login
   static Future<Map<String, dynamic>> login(

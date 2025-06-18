@@ -82,7 +82,8 @@ class ActivityInfoCard extends StatelessWidget {
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
                     color: app_theme.kWhiteColor.withOpacity(0.7),
-                    borderRadius: BorderRadius.circular(app_theme.defaultRadius),
+                    borderRadius:
+                        BorderRadius.circular(app_theme.defaultRadius),
                   ),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -91,7 +92,7 @@ class ActivityInfoCard extends StatelessWidget {
                         title,
                         textAlign: TextAlign.center,
                         style: app_theme.teksTextStyle.copyWith(
-                          fontSize: 18,
+                          fontSize: 16,
                           fontWeight: app_theme.bold,
                         ),
                       ),
@@ -100,7 +101,7 @@ class ActivityInfoCard extends StatelessWidget {
                         description,
                         textAlign: TextAlign.center,
                         style: app_theme.teksTextStyle.copyWith(
-                          fontSize: 14,
+                          fontSize: 12,
                           height: 1.5,
                         ),
                       ),

@@ -156,27 +156,6 @@ class _HomePageContentState extends State<HomePageContent> {
               const SizedBox(height: 16),
               StorybookHorizontalList(data.recommendedStorybooks),
               const SizedBox(height: 24),
-              const SectionTitle("Best Storybook based of Genre"),
-              const SizedBox(height: 16),
-              GenreSelector(
-                genres: genres,
-                selectedIndex: selectedGenreIndex,
-                onGenreSelected: (index) {
-                  _onGenreSelected(index, genres);
-                },
-              ),
-              const SizedBox(height: 16),
-              StorybookHorizontalList(genreStorybooks),
-              const SizedBox(height: 24),
-              _buildFavoriteGenreHeader(),
-              const SizedBox(height: 16),
-              FavoriteGenreList(favoriteGenres: [
-                {'title': 'Romance', 'icon': Icons.favorite_border},
-                {'title': 'Adventure', 'icon': Icons.explore_outlined},
-                {'title': 'Fantasy', 'icon': Icons.auto_stories_outlined},
-                {'title': 'Sci-Fi', 'icon': Icons.rocket_launch_outlined},
-              ]),
-              const SizedBox(height: 24),
               ActivityCard(onQuickActivityTap: () {
                 // Find the nearest _HomeScreenState and call its _onNavItemTapped(1)
                 final homeScreenState =
